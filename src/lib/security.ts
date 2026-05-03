@@ -1,5 +1,3 @@
-import { createHash } from 'crypto';
-
 export class SecurityBroker {
   private static instance: SecurityBroker;
   private rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -26,8 +24,12 @@ export class SecurityBroker {
     return emailRegex.test(email);
   }
 
-  hashPassword(password: string): string {
-    return createHash('sha256').update(password).digest('hex');
+  async hashPassword(password: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
   rateLimit(identifier: string, limit: number, windowMs: number): boolean {

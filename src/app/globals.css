@@ -3,6 +3,9 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --soberano-deep: #0A192F;
+  --soberano-gold: #D4AF37;
+  --soberano-emerald: #004D40;
 }
 
 @theme inline {
@@ -23,4 +26,216 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* 🏛️ Imperial Design System - GEO v8.1 */
+
+/* Gold Glow Button Effect */
+.btn-gold-glow {
+  @apply relative inline-flex items-center justify-center px-6 py-3 font-bold rounded-lg transition-all duration-300 transform hover:scale-105;
+  background: linear-gradient(to right, #D4AF37, #F4E4C1);
+  color: #0A192F;
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+  animation: goldGlow 2s ease-in-out infinite alternate;
+}
+
+.btn-gold-glow:hover {
+  background: linear-gradient(to right, #F4E4C1, #D4AF37);
+  box-shadow: 0 10px 40px rgba(212, 175, 55, 0.4);
+}
+
+.btn-gold-glow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s;
+}
+
+.btn-gold-glow:hover::before {
+  left: 100%;
+}
+
+/* Imperial Card */
+.imperial-card {
+  @apply bg-white rounded-xl transition-all duration-300;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: 0 8px 32px rgba(10, 25, 47, 0.8);
+  backdrop-filter: blur(12px);
+}
+
+.imperial-card:hover {
+  box-shadow: 0 10px 40px rgba(212, 175, 55, 0.4);
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+/* Deep Ocean Background */
+.deep-ocean-bg {
+  background: linear-gradient(to bottom right, #0A192F, #1B263B, #0D1B2A);
+}
+
+/* Imperial Text */
+.text-imperial {
+  background: linear-gradient(to right, #D4AF37, #F4E4C1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gold Shimmer Effect */
+.gold-shimmer {
+  @apply relative overflow-hidden;
+}
+
+.gold-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(212, 175, 55, 0.3),
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: shimmer 2s infinite;
+}
+
+/* Security Badge */
+.security-badge {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+  background: rgba(0, 77, 64, 0.1);
+  color: #004D40;
+  border: 1px solid rgba(0, 77, 64, 0.2);
+}
+
+/* Priority Alert */
+.priority-s-alert {
+  @apply animate-pulse text-white font-bold px-4 py-2 rounded-lg shadow-lg;
+  background: linear-gradient(to right, #8B0000, #dc2626);
+}
+
+/* Loading Imperial */
+.loading-imperial {
+  @apply animate-spin rounded-full h-8 w-8;
+  border-bottom: 2px solid #D4AF37;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--soberano-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--soberano-gold);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #F4E4C1;
+}
+
+/* Responsive Imperial Grid */
+.imperial-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+}
+
+/* Modal Overlay */
+.imperial-overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center;
+  background: rgba(10, 25, 47, 0.8);
+  backdrop-filter: blur(12px);
+}
+
+/* Input Fields */
+.imperial-input {
+  @apply w-full px-4 py-2 rounded-lg focus:outline-none transition-all duration-200;
+  background: rgba(10, 25, 47, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.imperial-input:focus {
+  border-color: #D4AF37;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.5);
+}
+
+.imperial-input::placeholder {
+  color: rgba(27, 38, 59, 0.6);
+}
+
+/* Navigation */
+.imperial-nav {
+  @apply border-b;
+  background: rgba(10, 25, 47, 0.95);
+  backdrop-filter: blur(12px);
+  border-color: rgba(212, 175, 55, 0.2);
+}
+
+.imperial-nav-link {
+  @apply font-medium transition-colors duration-200;
+  color: #F8F9FA;
+}
+
+.imperial-nav-link:hover {
+  color: #D4AF37;
+}
+
+.imperial-nav-link.active {
+  color: #D4AF37;
+}
+
+/* Status Indicators */
+.status-published {
+  @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
+}
+
+.status-reserved {
+  @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200;
+}
+
+.status-sold {
+  @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200;
+}
+
+/* Score Indicators */
+.score-high {
+  @apply font-bold text-lg;
+  color: #004D40;
+}
+
+.score-medium {
+  @apply font-medium;
+  color: #D4AF37;
+}
+
+.score-low {
+  color: #1B263B;
+}
+
+/* Engagement Metrics */
+.engagement-card {
+  @apply rounded-lg p-4;
+  background: linear-gradient(to bottom right, rgba(10, 25, 47, 0.5), rgba(27, 38, 59, 0.5));
+  border: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+/* Responsive Typography */
+@media (max-width: 768px) {
+  .imperial-grid {
+    @apply grid-cols-1;
+  }
+  
+  .btn-gold-glow {
+    @apply px-4 py-2 text-sm;
+  }
 }

@@ -14,7 +14,7 @@ export function middleware(request: NextRequest) {
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   
   // Rate limiting
-  const clientIP = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+  const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
   const isAllowed = security.rateLimit(clientIP, 100, 60000); // 100 requests per minute
   
   if (!isAllowed) {
