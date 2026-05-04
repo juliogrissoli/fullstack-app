@@ -43,7 +43,7 @@ export async function processLeadScoring(formData: FormData) {
         engagement_bonus: engagementBonus
       },
       ip_address: 'server_action',
-      user_agent: 'processLeadScoring'
+      user_agent: 'Security Broker v3.0'
     });
 
     return result;

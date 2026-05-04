@@ -150,7 +150,7 @@ export async function triggerPrioritySAlert(userId: string, score: number): Prom
       score,
       timestamp: new Date().toISOString(),
       type: 'PRIORITY_S_ALERT',
-      source: 'Security Broker v2.0'
+      source: 'Security Broker v3.0'
     };
 
     const response = await fetch(webhookUrl, {

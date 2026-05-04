@@ -28,7 +28,7 @@ export default function Home() {
             <div className="flex justify-between h-16">
               <div className="flex items-center">
                 <h1 className="text-2xl font-bold text-imperial">🛡️ Security Broker</h1>
-                <span className="ml-2 text-sm text-soberano-pearl">v2.0</span>
+                <span className="ml-2 text-sm text-soberano-pearl">v3.0</span>
               </div>
               <div className="flex items-center space-x-4">
                 <button
@@ -55,7 +55,7 @@ export default function Home() {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center mb-12">
             <h1 className="text-5xl font-bold text-imperial mb-4">
-              Security Broker v2.0
+              Security Broker v3.0
             </h1>
             <p className="text-xl text-soberano-pearl mb-8">
               Plataforma de Segurança Avançada com Monitoramento em Tempo Real
@@ -154,7 +154,7 @@ export default function Home() {
         <footer className="imperial-nav mt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="text-center text-soberano-pearl">
-              <p>© 2026 Security Broker v2.0 - Todos os direitos reservados</p>
+              <p>© 2026 Security Broker v3.0 - Todos os direitos reservados</p>
               <p className="text-sm mt-2">Sistema 120% Auditado • Build: 876b91f</p>
             </div>
           </div>
