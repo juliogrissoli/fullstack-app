@@ -140,25 +140,30 @@ export async function getUserEngagementHistory(userId: string): Promise<{
   }
 }
 
-async function triggerPrioritySAlert(userId: string, score: number): Promise<void> {
+export async function triggerPrioritySAlert(userId: string, score: number): Promise<void> {
   try {
-    // Log priority alert
-    console.log(`🚨 PRIORITY S ALERT: User ${userId} reached score ${score}`);
+    // Send webhook to Priority S system
+    const webhookUrl = process.env.PRIORITY_S_WEBHOOK_URL || 'https://your-webhook-endpoint.com/priority-s';
     
-    // Here you can implement webhook calls, notifications, etc.
-    // For example:
-    // await fetch(process.env.WEBHOOK_URL!, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({
-    //     type: 'priority_s_alert',
-    //     userId,
-    //     score,
-    //     timestamp: new Date().toISOString()
-    //   })
-    // });
-    
-    // You could also send an email via Resend, Slack notification, etc.
+    const payload = {
+      userId,
+      score,
+      timestamp: new Date().toISOString(),
+      type: 'PRIORITY_S_ALERT',
+      source: 'Security Broker v2.0'
+    };
+
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      console.error(`Priority S webhook failed: ${response.status} ${response.statusText}`);
+    } else {
+      console.log(`Priority S Alert sent successfully: User ${userId} reached score ${score}`);
+    }
   } catch (error) {
     console.error('Error triggering Priority S alert:', error);
   }
