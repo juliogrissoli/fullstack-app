@@ -27,8 +27,8 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
               <div className="flex items-center">
-                <h1 className="text-2xl font-bold text-imperial">🏛️ GEO v8.1</h1>
-                <span className="ml-2 text-sm text-soberano-pearl">IMPERIUM EDITION</span>
+                <h1 className="text-2xl font-bold text-imperial">🛡️ Security Broker</h1>
+                <span className="ml-2 text-sm text-soberano-pearl">v2.0</span>
               </div>
               <div className="flex items-center space-x-4">
                 <button
@@ -55,10 +55,10 @@ export default function Home() {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center mb-12">
             <h1 className="text-5xl font-bold text-imperial mb-4">
-              Seu Império Digital
+              Security Broker v2.0
             </h1>
             <p className="text-xl text-soberano-pearl mb-8">
-              Plataforma Premium de Investimentos em Terras com Inteligência Preditiva
+              Plataforma de Segurança Avançada com Monitoramento em Tempo Real
             </p>
             
             {/* Status Badge */}
@@ -131,10 +131,10 @@ export default function Home() {
           {/* CTA Section */}
           <div className="text-center">
             <h2 className="text-3xl font-bold text-imperial mb-4">
-              Pronto para Governar seu Império?
+              Pronto para Proteger seu Sistema?
             </h2>
             <p className="text-soberano-pearl mb-8">
-              Sistema completo, blindado e pronto para faturar
+              Security Broker completo, blindado e pronto para operação
             </p>
             <div className="flex justify-center space-x-4">
               <button className="btn-gold-glow">
@@ -154,7 +154,7 @@ export default function Home() {
         <footer className="imperial-nav mt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="text-center text-soberano-pearl">
-              <p>© 2026 GEO v8.1 IMPERIUM EDITION - Todos os direitos reservados</p>
+              <p>© 2026 Security Broker v2.0 - Todos os direitos reservados</p>
               <p className="text-sm mt-2">Sistema 120% Auditado • Build: 876b91f</p>
             </div>
           </div>
