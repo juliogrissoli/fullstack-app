@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { sendEmail } from '@/lib/resend';
 import { SecurityBroker } from '@/lib/security';
+import Stripe from 'stripe';
 
 interface HealthCheckResult {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -11,6 +12,7 @@ interface HealthCheckResult {
     resend: ServiceStatus;
     security: ServiceStatus;
     database: ServiceStatus;
+    stripe: ServiceStatus;
   };
   metrics: {
     responseTime: number;
@@ -37,6 +39,7 @@ export async function GET() {
       resend: { status: 'fail', message: 'Not tested' },
       security: { status: 'fail', message: 'Not tested' },
       database: { status: 'fail', message: 'Not tested' },
+      stripe: { status: 'fail', message: 'Not tested' },
     },
     metrics: {
       responseTime: 0,
@@ -210,16 +213,56 @@ export async function GET() {
       status: 'fail',
       message: `Exception: ${error}`,
     };
-    health.alerts.push('❌ Database validation exception occurred');
+    health.alerts.push('❌ Database schema issues detected');
+  }
+
+  // Test 5: Stripe Integration
+  try {
+    const stripeStart = Date.now();
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: '2026-04-22.dahlia',
+    });
+
+    // Test Stripe API connectivity
+    const balance = await stripe.balance.retrieve();
+    const stripeTime = Date.now() - stripeStart;
+
+    if (balance && balance.object === 'balance') {
+      health.services.stripe = {
+        status: 'pass',
+        responseTime: stripeTime,
+        message: 'Stripe API operational',
+        details: {
+          apiVersion: '2026-04-22.dahlia',
+          available: balance.available?.[0]?.amount || 0,
+          currency: balance.available?.[0]?.currency || 'BRL'
+        }
+      };
+    } else {
+      health.services.stripe = {
+        status: 'fail',
+        responseTime: stripeTime,
+        message: 'Stripe API response invalid',
+        details: { balanceObject: balance?.object }
+      };
+      health.alerts.push('❌ Stripe API response invalid');
+    }
+  } catch (error) {
+    health.services.stripe = {
+      status: 'fail',
+      message: `Stripe exception: ${error}`,
+    };
+    health.alerts.push('❌ Stripe API exception occurred');
   }
 
   // Calculate overall health status
-  const failedServices = Object.values(health.services).filter(s => s.status === 'fail').length;
-  const warnServices = Object.values(health.services).filter(s => s.status === 'warn').length;
+  const serviceStatuses = Object.values(health.services);
+  const failedServices = serviceStatuses.filter(s => s.status === 'fail').length;
+  const passedServices = serviceStatuses.filter(s => s.status === 'pass').length;
   
   if (failedServices > 0) {
     health.status = failedServices >= 2 ? 'unhealthy' : 'degraded';
-  } else if (warnServices > 0) {
+  } else if (serviceStatuses.filter(s => s.status === 'warn').length > 0) {
     health.status = 'degraded';
   }
 
