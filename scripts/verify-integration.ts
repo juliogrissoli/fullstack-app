@@ -1,13 +1,14 @@
 #!/usr/bin/env tsx
 
 /**
- * 🏛️ THE SOVEREIGN AUDIT - Protocolo de Validação de 4 Camadas
- * Verificação completa de integração do sistema GEO v8.1 IMPERIUM EDITION
+ * 🏛️ THE// 🏛️ VERIFICAÇÃO DE INTEGRAÇÃO - GEO v8.1 IMPERIUM EDITION
+// Security Broker SB v6.7.0 - Teste Completo de Sistema
+// Validação de Conexões, RLS, Scoring e Automação
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { Resend } from 'resend';
-import { createHash } from 'crypto';
+import { gerarNexoCausal, calcularScoringPreditivo, verificarPrioridadeS } from '@/lib/nexo-causal';
+import { enviarEmailTransacional } from '@/lib/email';
 
 // Configuração
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321';

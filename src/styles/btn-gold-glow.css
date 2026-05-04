@@ -1,0 +1,49 @@
+/* 🏛️ BUTTON GOLD GLOW - GEO v8.1 IMPERIUM EDITION */
+/* Security Broker SB v6.7.0 - Design System Soberano */
+
+.btn-gold-glow {
+  @apply bg-soberano-gold text-soberano-deep font-semibold px-6 py-3 rounded-lg;
+  @apply transition-all duration-300 hover:scale-105 hover:shadow-2xl;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-gold-glow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-gold-glow:hover::before {
+  left: 100%;
+}
+
+.btn-gold-glow:hover {
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.8);
+  transform: translateY(-2px);
+}
+
+.btn-gold-glow:active {
+  transform: translateY(0);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+}
+
+/* Animação de brilho sutil */
+@keyframes goldPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(212, 175, 55, 0.7);
+  }
+}
+
+.btn-gold-glow.pulse {
+  animation: goldPulse 2s infinite;
+}
