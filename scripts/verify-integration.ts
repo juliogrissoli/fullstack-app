@@ -7,6 +7,8 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { Resend } from 'resend';
+import * as crypto from 'crypto';
 import { gerarNexoCausal, calcularScoringPreditivo, verificarPrioridadeS } from '@/lib/nexo-causal';
 import { enviarEmailTransacional } from '@/lib/email';
 
@@ -253,7 +255,7 @@ class SovereignAudit {
 
       // Gerar hash SHA-256 manualmente (como o trigger faria)
       const hashInput = `${testData.user_id}${testData.asset_id}${testData.timestamp}`;
-      const expectedHash = createHash('sha256').update(hashInput).digest('hex');
+      const expectedHash = crypto.createHash('sha256').update(hashInput).digest('hex');
 
       // Inserir registro em lead_views (trigger deve gerar hash)
       const { data: insertData, error: insertError } = await supabase

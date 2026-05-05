@@ -3,11 +3,60 @@
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "framework": "nextjs",
+  "regions": ["gru1"],
   "env": {
     "NEXT_PUBLIC_SUPABASE_URL": "@supabase-url",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase-anon-key",
     "RESEND_API_KEY": "@resend-api-key",
     "SUPABASE_SERVICE_ROLE_KEY": "@supabase-service-role-key",
-    "NEXT_PUBLIC_APP_URL": "@app-url"
-  }
+    "NEXT_PUBLIC_APP_URL": "@app-url",
+    "GEMINI_API_KEY": "@gemini-api-key",
+    "STRIPE_SECRET_KEY": "@stripe-secret-key",
+    "MERCADO_PAGO_ACCESS_TOKEN": "@mercado-pago-access-token"
+  },
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_SUPABASE_URL": "@supabase-url",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase-anon-key",
+      "NEXT_PUBLIC_APP_URL": "@app-url"
+    }
+  },
+  "functions": {
+    "src/app/api/unicornio-soberano/route.ts": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://api.supabase.co https://api.stripe.com https://api.resend.com; frame-ancestors 'none';"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/health",
+      "destination": "/api/health"
+    }
+  ]
 }

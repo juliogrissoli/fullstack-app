@@ -2,11 +2,21 @@
 /* Security Broker SB v6.7.0 - Design System Soberano */
 
 .btn-gold-glow {
-  @apply bg-soberano-gold text-soberano-deep font-semibold px-6 py-3 rounded-lg;
-  @apply transition-all duration-300 hover:scale-105 hover:shadow-2xl;
+  background-color: rgb(234 179 8);
+  color: rgb(17 24 39);
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  transform: scale(1);
   box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
   position: relative;
   overflow: hidden;
+}
+
+.btn-gold-glow:hover {
+  transform: scale(1.05);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
 .btn-gold-glow::before {

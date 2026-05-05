@@ -8,15 +8,23 @@
     "start": "next start",
     "lint": "eslint",
     "audit": "tsx scripts/verify-integration.ts",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "stress-test": "tsx src/scripts/stress-test-soberano.ts",
+    "test-full-cycle": "tsx src/scripts/test-full-cycle.ts",
+    "test-security": "tsx src/scripts/test-security-break.ts",
+    "system-check": "tsx -e \"import('./src/app/api/admin/system-check/route.ts').then(m => m.GET({ url: 'http://localhost:3000/api/admin/system-check' }));\""
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.105.1",
     "@tailwindcss/forms": "^0.5.11",
     "@tailwindcss/typography": "^0.5.19",
     "next": "16.2.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-hot-toast": "^2.6.0",
+    "recharts": "^3.8.1",
     "resend": "^6.12.2",
     "stripe": "^22.1.0"
   },
