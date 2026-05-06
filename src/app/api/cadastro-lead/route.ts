@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
       sb_score: Math.floor(Math.random() * 200) + 600, // Score inicial 600-800
       lgpd_consentimento: body.consentimento_lgpd,
       data_consentimento_lgpd: new Date().toISOString(),
-      ip_cadastro: request.ip || request.headers.get('x-forwarded-for') || 'desconhecido',
+      ip_cadastro: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'desconhecido',
       user_agent_cadastro: request.headers.get('user-agent') || 'desconhecido'
     };
     

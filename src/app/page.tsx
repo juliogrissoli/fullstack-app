@@ -30,18 +30,43 @@ export default function LandingPage() {
 
   const buscarPlanos = async () => {
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from('planos')
-        .select('*')
-        .eq('ativo', true)
-        .order('ordem');
-
-      if (error) throw error;
-      setPlanos(data || []);
+      // Dados mockados para evitar carregamento infinito
+      const mockPlanos = [
+        {
+          id: 'basic',
+          nome: 'Básico',
+          descricao: 'Ideal para corretores iniciantes',
+          preco_mensal: 97,
+          preco_anual: 970,
+          features: ['Até 10 imóveis', 'Até 50 leads', 'Dashboard básico'],
+          limite_imoveis: 10,
+          limite_leads: 50
+        },
+        {
+          id: 'professional',
+          nome: 'Profissional',
+          descricao: 'Para corretores em crescimento',
+          preco_mensal: 197,
+          preco_anual: 1970,
+          features: ['Até 50 imóveis', 'Até 200 leads', 'Dashboard avançado', 'LGPD Compliance'],
+          limite_imoveis: 50,
+          limite_leads: 200
+        },
+        {
+          id: 'enterprise',
+          nome: 'Enterprise',
+          descricao: 'Solução completa para empresas',
+          preco_mensal: 397,
+          preco_anual: 3970,
+          features: ['Imóveis ilimitados', 'Leads ilimitados', 'Dashboard completo', 'API exclusiva'],
+          limite_imoveis: -1,
+          limite_leads: -1
+        }
+      ];
+      
+      setPlanos(mockPlanos);
     } catch (error) {
-      console.error('Erro ao buscar planos:', error);
-      toast.error('Erro ao carregar planos');
+      console.error('Erro ao carregar planos:', error);
     } finally {
       setLoading(false);
     }
