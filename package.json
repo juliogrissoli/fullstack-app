@@ -12,7 +12,9 @@
     "stress-test": "tsx src/scripts/stress-test-soberano.ts",
     "test-full-cycle": "tsx src/scripts/test-full-cycle.ts",
     "test-security": "tsx src/scripts/test-security-break.ts",
-    "system-check": "tsx -e \"import('./src/app/api/admin/system-check/route.ts').then(m => m.GET({ url: 'http://localhost:3000/api/admin/system-check' }));\""
+    "system-check": "tsx -e \"import('./src/app/api/admin/system-check/route.ts').then(m => m.GET({ url: 'http://localhost:3000/api/admin/system-check' }));\"",
+    "sync-vercel": "node scripts/sync-vercel-env.js",
+    "fix-critical": "node scripts/fix-critical-env.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
