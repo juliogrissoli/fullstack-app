@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
       dados_lgpd: {
         consentimento_registrado: consentimentoResult.sucesso,
         data_consentimento: new Date().toISOString(),
-        ip_acesso: request.ip || request.headers.get('x-forwarded-for') || 'desconhecido'
+        ip_acesso: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'desconhecido'
       }
     };
     
