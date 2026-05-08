@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { supabase } from '@/lib/supabase-admin';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2026-04-22.dahlia',
 });
 
 export async function POST(request: Request) {
@@ -142,7 +142,7 @@ export async function GET(request: Request) {
         session_id: sessionId,
         asset_id: session.metadata?.asset_id,
         report_type: session.metadata?.report_type,
-        amount: session.amount_total,
+        amount: session.amount_total ?? 0,
         currency: session.currency
       },
       ip_address: 'api_stripe',
@@ -153,7 +153,7 @@ export async function GET(request: Request) {
     await supabase.from('sales_commissions').insert({
       user_id: session.metadata?.user_id,
       asset_id: session.metadata?.asset_id,
-      valor_comissao: session.amount_total * 0.05, // 5% de comissão
+      valor_comissao: (session.amount_total ?? 0) * 0.05, // 5% de comissão
       status_comissao: 'pendente',
       data_venda: new Date().toISOString()
     });
@@ -163,7 +163,7 @@ export async function GET(request: Request) {
       session: {
         id: session.id,
         payment_status: session.payment_status,
-        amount_total: session.amount_total,
+        amount_total: session.amount_total ?? 0,
         currency: session.currency,
         metadata: session.metadata
       }

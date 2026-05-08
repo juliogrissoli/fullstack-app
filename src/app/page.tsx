@@ -238,7 +238,7 @@ export default function LandingPage() {
                   )}
                 </div>
                 <ul className="space-y-3 mb-8">
-                  {JSON.parse(plano.features || '[]').map((feature: string, index: number) => (
+                  {(typeof plano.features === 'string' ? JSON.parse(plano.features) : plano.features || []).map((feature: string, index: number) => (
                     <li key={index} className="flex items-center">
                       <span className="text-green-400 mr-2">✓</span>
                       {feature}

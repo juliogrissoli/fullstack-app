@@ -1,0 +1,24 @@
+
+> fullstack-app@0.1.0 build
+> next build
+
+▲ Next.js 16.2.4 (Turbopack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 34.8s
+  Running TypeScript ...
+Failed to type check.
+
+./src/app/api/white-label/route.ts:456:5
+Type error: Cannot find name 'dispositivos_acessados'. Did you mean 'dispositivosAcessados'?
+
+  [90m454 |[0m     acessos_falha: acessosFalha,
+  [90m455 |[0m     acessos_bloqueados: acessosBloqueados,
+[31m[1m>[0m [90m456 |[0m     dispositivos_acessados,
+  [90m    |[0m     [31m[1m^[0m
+  [90m457 |[0m     paginas_acessadas,
+  [90m458 |[0m     detalhes_logs: logs.map(l => ({
+  [90m459 |[0m       id: l.id,
+Next.js build worker exited with code: 1 and signal: null

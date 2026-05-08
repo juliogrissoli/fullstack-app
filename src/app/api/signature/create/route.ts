@@ -30,13 +30,13 @@ export async function POST(request: NextRequest) {
     // 1. Parse e validação do request
     const body: SignatureCreateRequest = await request.json();
     
-    if (!body.deal_id || !body.signature_data || !body.termos_aceitos) {
+    if (!body.deal_id || !body.signature_data) {
       return NextResponse.json({
         erro: 'Dados obrigatórios faltando',
         campos_obrigatorios: ['deal_id', 'signature_data', 'termos_aceitos']
       }, { status: 400 });
     }
-    
+
     if (!body.termos_aceitos) {
       return NextResponse.json({
         erro: 'Termos de uso não aceitos',
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     
     // 6. Preparar registro da assinatura
     const signatureRecord = {
-      id: `SIG-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+      id: `SIG-${Date.now()}-${Math.random().toString(36).slice(2, 11).toUpperCase()}`,
       deal_id: body.deal_id,
       user_id: userId,
       signature_data: body.signature_data,
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
     
     // 11. Gerar QR Code para o contrato
     const { gerarQRCodeContrato } = await import('@/lib/qr-code-generator');
-    const qrCodeResult = await gerarQRCodeContrato.default(savedSignature);
+    const qrCodeResult = await gerarQRCodeContrato(savedSignature);
     
     console.log(`✅ Assinatura criada com sucesso - ID: ${savedSignature.id}`);
     
@@ -213,7 +213,7 @@ async function registrarLogAuditoria(dados: {
     await supabase
       .from('logs_auditoria')
       .insert({
-        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+        id: `LOG-${Date.now()}-${Math.random().toString(36).slice(2, 11).toUpperCase()}`,
         user_id: dados.user_id,
         recurso_acessado: `signature_${dados.signature_id}`,
         timestamp: new Date().toISOString(),

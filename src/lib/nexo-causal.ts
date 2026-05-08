@@ -51,7 +51,7 @@ export async function calcularScoringPreditivo(leadData: {
   origem_trafego?: string;
   tempo_no_site_segundos?: number;
   documentos_baixados?: string[];
-}): Promise<{ score: number; prioridade: string; detalhes: any }> {
+}): Promise<{ score: number; prioridade: string; detalhes?: any; error?: string }> {
   try {
     let score = 0;
     const detalhes: any = {};

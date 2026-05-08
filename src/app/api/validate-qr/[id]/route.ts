@@ -367,3 +367,242 @@ async function registrarLogAcessoQRCode(dados: {
     console.error('❌ Erro ao registrar log QR Code:', error);
   }
 }
+
+/**
+ * Gerar página de validação bem-sucedida para QR Code válido
+ */
+function gerarPaginaValidacao(dados: any): string {
+  return `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Validado - Security Broker SB</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #0a1628 0%, #1e3a5f 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #D4AF37 0%, #b8941f 100%);
+            color: #0a1628;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            background: #f0fdf4;
+            border: 2px solid #16a34a;
+        }
+
+        .status-icon {
+            font-size: 48px;
+        }
+
+        .status-text h3 {
+            color: #16a34a;
+            margin-bottom: 5px;
+        }
+
+        .status-text p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .detail-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .detail-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #D4AF37;
+            color: #0a1628;
+        }
+
+        .btn-primary:hover {
+            background: #b8941f;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+            transform: translateY(-1px);
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .footer-logo {
+            font-size: 14px;
+            font-weight: bold;
+            color: #D4AF37;
+            margin-bottom: 5px;
+        }
+
+        .footer-text {
+            font-size: 12px;
+            color: #666;
+        }
+
+        @media (max-width: 600px) {
+            .actions {
+                flex-direction: column;
+            }
+
+            .container {
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🏛️ SECURITY BROKER SB</div>
+            <div class="subtitle">QR Code Validado com Sucesso</div>
+        </div>
+
+        <div class="content">
+            <div class="status">
+                <div class="status-icon">✅</div>
+                <div class="status-text">
+                    <h3>Validação Bem-Sucedida</h3>
+                    <p>Seu QR Code foi validado com sucesso</p>
+                </div>
+            </div>
+
+            <div class="details">
+                <div class="detail-item">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value">Contrato Válido e Verificado</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Data de Validação</div>
+                    <div class="detail-value">${new Date().toLocaleString('pt-BR')}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Sistema</div>
+                    <div class="detail-value">Security Broker - SB Imperium v14.0</div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}" class="btn btn-primary">
+                    🏠 Ir para o Início
+                </a>
+                <button onclick="window.history.back()" class="btn btn-secondary">
+                    ← Voltar
+                </button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-logo">SECURITY BROKER SB</div>
+            <div class="footer-text">Sistema Soberano de Assinaturas Digitais</div>
+            <div class="footer-text">Verificação bem-sucedida em ${new Date().toLocaleString('pt-BR')}</div>
+        </div>
+    </div>
+</body>
+</html>
+  `.trim();
+}

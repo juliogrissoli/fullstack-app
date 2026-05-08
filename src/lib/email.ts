@@ -348,7 +348,7 @@ function gerarTemplate(tipo: string, dados: EmailData): EmailTemplate {
     }
   };
 
-  return templates[tipo] || templates['boas-vindas'];
+  return (templates as Record<string, EmailTemplate>)[tipo] || templates['boas-vindas'];
 }
 
 export async function enviarEmailBoasVindas(usuario: { email: string; nome: string }) {
@@ -386,3 +386,5 @@ export async function enviarAlertaPrioridadeS(usuario: { email: string }, dadosL
     dados: dadosLead
   });
 }
+
+

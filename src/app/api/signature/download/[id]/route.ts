@@ -83,16 +83,7 @@ export async function GET(
     // 4. Gerar PDF (usando puppeteer ou jsPDF)
     const pdfBuffer = await generatePDFBuffer(pdfHtml);
     
-    // 5. Configurar headers para download
-    const headers = new Headers({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="SB_Signature_${signatureId}.pdf"`,
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
-    });
-    
-    // 6. Registrar log de auditoria
+    // 5. Registrar log de auditoria
     await registrarLogAuditoria({
       signature_id: signatureId,
       acao: 'download_pdf',
@@ -101,8 +92,8 @@ export async function GET(
     });
     
     console.log(`✅ PDF gerado com sucesso - Assinatura: ${signatureId}`);
-    
-    return new Response(pdfBuffer, { 
+
+    return new Response(new Uint8Array(pdfBuffer), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="SB_Signature_${signatureId}.pdf"`,
@@ -490,7 +481,7 @@ async function registrarLogAuditoria(dados: {
     await supabase
       .from('logs_auditoria')
       .insert({
-        id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+        id: `LOG-${Date.now()}-${Math.random().toString(36).slice(2, 11).toUpperCase()}`,
         user_id: 'system',
         recurso_acessado: `signature_${dados.signature_id}`,
         timestamp: new Date().toISOString(),

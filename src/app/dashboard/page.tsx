@@ -1,6 +1,7 @@
 // 🏛️ SECURITY BROKER SB v7.0 - DASHBOARD
 // Dashboard Bancário Gold Edition com métricas em tempo real
 
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { formatarMoeda } from '@/lib/multinivel';
 import DashboardGraficoVGV from '@/components/DashboardGraficoVGV';
@@ -9,7 +10,7 @@ import SocialImpactMeter from '@/components/admin/SocialImpactMeter';
 import LGPDComplianceBadge from '@/components/LGPDComplianceBadge';
 
 export default async function DashboardPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   
   // Buscar dados do usuário logado
   const { data: { user } } = await supabase.auth.getUser();

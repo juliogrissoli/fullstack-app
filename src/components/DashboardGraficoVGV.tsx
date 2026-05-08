@@ -44,21 +44,22 @@ export default function DashboardGraficoVGV({ dados }: DashboardGraficoVGVProps)
           <YAxis 
             stroke="#9CA3AF"
             style={{ fontSize: '12px' }}
-            tickFormatter={formatarMoeda}
+            tickFormatter={(value) => formatarMoeda(Number(value) || 0)}
           />
-          <Tooltip 
+          <Tooltip
             contentStyle={{
               backgroundColor: '#1F2937',
               border: '1px solid #D4AF37',
               borderRadius: '8px',
             }}
             labelStyle={{ color: '#D4AF37' }}
-            formatter={(value: number) => [formatarMoeda(value), 'VGV']}
+            formatter={(value: any) => formatarMoeda(Number(value) || 0)}
           />
           <Area
             type="monotone"
             dataKey="valor"
-            stroke="#D4AF37"
+            stroke="
+#D4AF37"
             strokeWidth={2}
             fillOpacity={1}
             fill="url(#colorValor)"

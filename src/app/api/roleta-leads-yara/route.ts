@@ -230,7 +230,14 @@ async function processarDistribuicao(dados: any): Promise<RoletaLeadsYaraRespons
   }
   
   // Processar distribuição
-  const detalhesLeads = [];
+  const detalhesLeads: Array<{
+    lead_id: string;
+    broker_selecionado: string;
+    score_performance: number;
+    tempo_resposta: number;
+    taxa_conversao: number;
+    motivo_selecao: string;
+  }> = [];
   let leadsDistribuidos = 0;
   
   for (const lead of leadsPendentes) {
@@ -406,7 +413,7 @@ async function atualizarScore(dados: any): Promise<RoletaLeadsYaraResponse['scor
       data_referencia: dataHoje,
       total_leads_recebidos: leadsHoje?.length || 0,
       leads_convertidos: leadsConvertidos?.length || 0,
-      taxaConversao,
+      taxa_conversao: taxaConversao,
       tempo_medio_resposta: tempoMedioResposta,
       score_atendimento: scoreAtendimento,
       score_conversao: scoreConversao,
@@ -425,7 +432,7 @@ async function atualizarScore(dados: any): Promise<RoletaLeadsYaraResponse['scor
     .eq('data_referencia', dataHoje)
     .order('score_final', { ascending: false });
   
-  const rankingImobiliaria = ranking?.findIndex(r => r.broker_id === broker_id) + 1 || 0;
+  const rankingImobiliaria = (ranking?.findIndex(r => r.broker_id === broker_id) ?? -1) + 1;
   
   return {
     broker_id: scoreAtualizado.broker_id,

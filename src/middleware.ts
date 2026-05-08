@@ -88,14 +88,17 @@ export function middleware(request: NextRequest) {
         process.env.NEXT_PUBLIC_APP_URL,
         `https://${host}`,
         `https://www.${host}`
-      ].filter(Boolean);
-      
-      const isOriginAllowed = !origin || allowedOrigins.some(allowed => 
-        origin === allowed || origin.startsWith(allowed)
+      ].filter((x): x is string => !!x);
+
+      const originStr = origin ?? '';
+      const refererStr = referer ?? '';
+
+      const isOriginAllowed = !originStr || allowedOrigins.some(allowed =>
+        originStr === allowed || originStr.startsWith(allowed)
       );
-      
-      const isRefererAllowed = !referer || allowedOrigins.some(allowed => 
-        referer.startsWith(allowed)
+
+      const isRefererAllowed = !refererStr || allowedOrigins.some(allowed =>
+        refererStr.startsWith(allowed)
       );
       
       if (!isOriginAllowed || !isRefererAllowed) {

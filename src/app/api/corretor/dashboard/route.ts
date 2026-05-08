@@ -17,7 +17,7 @@ const supabase = createClient(
       persistSession: false
     },
     db: {
-      queryTimeout: 10000 // 10 segundos timeout
+      timeout: 10000 // 10 segundos timeout
     }
   }
 );
@@ -348,14 +348,17 @@ async function buscarLeadsAtendidos(corretorId: string): Promise<any[]> {
 
     if (error) throw error;
 
-    return leads?.map(associacao => ({
-      id: associacao.lead_id,
-      nome: associacao.leads?.nome || 'Lead',
-      status: associacao.status,
-      valor_estimado: associacao.leads?.valor_estimado || 0,
-      data_atendimento: associacao.created_at,
-      nexo_causal_hash: associacao.nexo_causal_hash
-    })) || [];
+    return leads?.map(associacao => {
+      const leadData = Array.isArray(associacao.leads) ? associacao.leads[0] : associacao.leads;
+      return {
+        id: associacao.lead_id,
+        nome: leadData?.nome || 'Lead',
+        status: associacao.status,
+        valor_estimado: leadData?.valor_estimado || 0,
+        data_atendimento: associacao.created_at,
+        nexo_causal_hash: associacao.nexo_causal_hash
+      };
+    }) || [];
 
   } catch (error) {
     console.error('🏛️ Erro ao buscar leads atendidos:', error);

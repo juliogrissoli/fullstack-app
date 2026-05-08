@@ -164,7 +164,7 @@ export async function sendWhatsAppSignatureRequest(message: WhatsAppMessage): Pr
         dealId: message.dealId,
         template: template.templateName,
         deepLink: generateDeepLink(message.preFetchData),
-        messageId: twilioResponse.messageId,
+        messageId: twilioResponse.messageId ?? '',
         status: 'enviado'
       });
       
@@ -210,7 +210,7 @@ async function sendViaTwilio(to: string, template: any): Promise<{
     // });
     
     // Simulação para desenvolvimento
-    const messageId = `WA_${Date.now()}_${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    const messageId = `WA_${Date.now()}_${Math.random().toString(36).slice(2, 11).toUpperCase()}`;
     
     console.log(`📱 Simulação Twilio - Para: ${to}, Template: ${template.templateName}`);
     
@@ -386,7 +386,7 @@ async function registrarLogWhatsApp(dados: {
     await supabase
       .from('logs_whatsapp')
       .insert({
-        id: `WA-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+        id: `WA-${Date.now()}-${Math.random().toString(36).slice(2, 11).toUpperCase()}`,
         para: dados.para,
         deal_id: dados.dealId,
         template: dados.template,
@@ -447,7 +447,7 @@ export async function criarFluxoAssinaturaWhatsApp(dados: {
       await supabase
         .from('fluxos_assinatura')
         .insert({
-          id: `FLUXO-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+          id: `FLUXO-${Date.now()}-${Math.random().toString(36).slice(2, 11).toUpperCase()}`,
           deal_id: dados.dealId,
           signer_phone: dados.signerPhone,
           signer_name: dados.signerName,

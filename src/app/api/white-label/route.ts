@@ -197,14 +197,14 @@ async function configurarWhiteLabel(dados: any): Promise<WhiteLabelResponse['con
   const funcionalidadesOcultasValidas = ['sb_branding', 'ecossistema_total', 'ourobos_compliance', 'dna_ativo', 'yara_predictive'];
   
   if (funcionalidades_visiveis) {
-    const invalidas = funcionalidades_visiveis.filter(f => !funcionalidadesValidas.includes(f));
+    const invalidas = funcionalidades_visiveis.filter((f: string) => !funcionalidadesValidas.includes(f));
     if (invalidas.length > 0) {
       throw new Error(`Funcionalidades visíveis inválidas: ${invalidas.join(', ')}`);
     }
   }
-  
+
   if (funcionalidades_ocultas) {
-    const invalidas = funcionalidades_ocultas.filter(f => !funcionalidadesOcultasValidas.includes(f));
+    const invalidas = funcionalidades_ocultas.filter((f: string) => !funcionalidadesOcultasValidas.includes(f));
     if (invalidas.length > 0) {
       throw new Error(`Funcionalidades ocultas inválidas: ${invalidas.join(', ')}`);
     }
@@ -415,7 +415,7 @@ async function consultarLogsAcesso(dados: any): Promise<WhiteLabelResponse['logs
   const acessosBloqueados = logs.filter(l => l.status_acesso === 'bloqueado').length;
   
   // Agrupar por dispositivo
-  const dispositivosAgrupados = logs.reduce((acc, log) => {
+  const dispositivosAgrupados = logs.reduce((acc: Record<string, number>, log) => {
     const tipo = log.dispositivo_tipo || 'desktop';
     if (!acc[tipo]) {
       acc[tipo] = 0;
@@ -424,14 +424,14 @@ async function consultarLogsAcesso(dados: any): Promise<WhiteLabelResponse['logs
     return acc;
   }, {});
   
-  const dispositivosAcessados = Object.entries(dispositivosAgrupados).map(([tipo, total]) => ({
+  const dispositivos_acessados = Object.entries(dispositivosAgrupados).map(([tipo, total]) => ({
     dispositivo_tipo: tipo,
     total_acessos: total,
     percentual_total: totalAcessos > 0 ? (total / totalAcessos) * 100 : 0
   }));
   
   // Agrupar por página
-  const paginasAgrupadas = logs.reduce((acc, log) => {
+  const paginasAgrupadas = logs.reduce((acc: Record<string, number>, log) => {
     const pagina = log.pagina_acessada || 'dashboard';
     if (!acc[pagina]) {
       acc[pagina] = 0;
@@ -440,7 +440,7 @@ async function consultarLogsAcesso(dados: any): Promise<WhiteLabelResponse['logs
     return acc;
   }, {});
   
-  const paginasAcessadas = Object.entries(paginasAgrupadas).map(([pagina, total]) => ({
+  const paginas_acessadas = Object.entries(paginasAgrupadas).map(([pagina, total]) => ({
     pagina_acessada: pagina,
     total_acessos: total,
     percentual_total: totalAcessos > 0 ? (total / totalAcessos) * 100 : 0
@@ -574,10 +574,10 @@ async function consultarEstatisticasGerais(): Promise<NextResponse> {
   const sslAtivos = configuracoes.filter(c => c.ssl_ativo).length;
   
   // Funcionalidades mais visíveis
-  const funcionalidadesVisiveis = {};
+  const funcionalidadesVisiveis: Record<string, number> = {};
   configuracoes.forEach(c => {
     if (c.funcionalidades_visiveis) {
-      c.funcionalidades_visiveis.forEach(f => {
+      c.funcionalidades_visiveis.forEach((f: string) => {
         if (!funcionalidadesVisiveis[f]) {
           funcionalidadesVisiveis[f] = 0;
         }

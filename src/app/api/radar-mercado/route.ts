@@ -441,7 +441,7 @@ async function criarEstudoDemanda(bairro: string, cidade: string): Promise<Radar
     banco_areas_disponiveis: novoEstudo.banco_areas_disponiveis,
     areas_escassas: novoEstudo.areas_escassas,
     tendencia_mercado: novoEstudo.tendencia_mercado,
-    oportunidade_score
+    oportunidade_score: oportunidadeScore
   };
 }
 
@@ -500,13 +500,13 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
     
-    const request: RadarMercadoRequest = {
+    const radarRequest: RadarMercadoRequest = {
       bairro,
       cidade,
       tipo_analise: tipo as any
     };
-    
-    const resultado = await executarRadarMercado(request);
+
+    const resultado = await executarRadarMercado(radarRequest);
     
     return NextResponse.json({
       success: true,

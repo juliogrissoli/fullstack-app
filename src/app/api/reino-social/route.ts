@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function processarContribuicao(dados: any): Promise<ReinoSocialResponse['contribuicao_processada']> {
-  const { mes_referencia, faturamento_bruto, custos_operacionais, splits_distribuidos } = dados;
+  const { mes_referencia } = dados;
   
   // Validar dados obrigatórios
   if (!mes_referencia) {
@@ -372,7 +372,7 @@ async function destinarRecursos(dados: any): Promise<ReinoSocialResponse['recurs
       tesouro_reino_id,
       projeto_social_id,
       valor_destinado,
-      percentual_destinado,
+      percentual_destinado: percentualDestinado,
       motivo_destinacao: motivo_destinacao || 'Destinação para projeto social',
       status_destinacao: 'provisionado',
       hash_destinacao: 'DESTINACAO-' + Date.now()
@@ -385,14 +385,13 @@ async function destinarRecursos(dados: any): Promise<ReinoSocialResponse['recurs
   }
   
   // Atualizar valor arrecadado do projeto
+  const { data: novoValorArrecadado } = await supabase.rpc('incrementar_valor_arrecadado', {
+    p_projeto_id: projeto_social_id,
+    p_valor: valor_destinado
+  });
   await supabase
     .from('projetos_sociais')
-    .update({
-      valor_arrecadado: await supabase.rpc('incrementar_valor_arrecadado', {
-        p_projeto_id: projeto_social_id,
-        p_valor: valor_destinado
-      })
-    })
+    .update({ valor_arrecadado: novoValorArrecadado })
     .eq('id', projeto_social_id);
   
   return {
@@ -520,14 +519,13 @@ async function aplicarServicoSocial(dados: any): Promise<ReinoSocialResponse['se
     .eq('id', servico_pro_bono_id);
   
   // Atualizar valor gasto do projeto
+  const { data: novoValorGasto } = await supabase.rpc('incrementar_valor_gasto', {
+    p_projeto_id: projeto_social_id,
+    p_valor: valorSocialAplicado
+  });
   await supabase
     .from('projetos_sociais')
-    .update({
-      valor_gasto: await supabase.rpc('incrementar_valor_gasto', {
-        p_projeto_id: projeto_social_id,
-        p_valor: valorSocialAplicado
-      })
-    })
+    .update({ valor_gasto: novoValorGasto })
     .eq('id', projeto_social_id);
   
   return {
@@ -767,7 +765,7 @@ async function consultarServicosProBonoBroker(brokerId: string): Promise<NextRes
   });
 }
 
-async function consultarSelosSolidarios(brokerId: string, imobiliariaId: string): Promise<NextResponse> {
+async function consultarSelosSolidarios(brokerId: string | null, imobiliariaId: string | null): Promise<NextResponse> {
   // Buscar selos do broker ou imobiliária
   let query = supabase
     .from('selos_parceiro_solidario')

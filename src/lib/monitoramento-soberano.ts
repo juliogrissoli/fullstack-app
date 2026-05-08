@@ -182,7 +182,7 @@ ${healthResult.resend.error ? `❌ Resend Error: ${healthResult.resend.error}` :
       .from('logs_asec')
       .insert({
         tipo_alerta: 'instabilidade_patrimonial',
-        severidade: healthResult.overhead === 'critical' ? 'critical' : 'warning',
+        severidade: healthResult.overall === 'critical' ? 'critical' : 'warning',
         mensagem: alertMessage,
         dados_tecnicos: healthResult,
         timestamp: new Date().toISOString(),

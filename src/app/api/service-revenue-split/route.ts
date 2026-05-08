@@ -292,7 +292,7 @@ export async function GET(request: NextRequest) {
     const periodo_referencia = searchParams.get('periodo_referencia');
     
     if (tipo === 'configuracoes_split') {
-      return await consultarConfiguracoesSplit(tipo_servico);
+      return await consultarConfiguracoesSplit(tipo_servico ?? undefined);
     }
     
     if (tipo === 'fluxos_servico' && prestador_id) {
@@ -316,11 +316,11 @@ export async function GET(request: NextRequest) {
     }
     
     if (tipo === 'ranking_fotografico') {
-      return await consultarRankingFotografico(periodo_referencia);
+      return await consultarRankingFotografico(periodo_referencia ?? undefined);
     }
     
     if (tipo === 'tesouro_reino_jesus_cristo') {
-      return await consultarTesouroReinoJesusCristo(mes_referencia);
+      return await consultarTesouroReinoJesusCristo(mes_referencia ?? undefined);
     }
     
     return NextResponse.json({

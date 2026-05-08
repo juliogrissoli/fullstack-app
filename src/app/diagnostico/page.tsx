@@ -22,6 +22,7 @@ interface AssetData {
 
 interface AnalysisResponse {
   success: boolean;
+  error?: string;
   protocol: string;
   sections: Array<{
     number: number;
@@ -99,7 +100,7 @@ export default function DiagnosticoPage() {
       setAssetData(prev => ({
         ...prev,
         [parent]: {
-          ...prev[parent as keyof AssetData],
+          ...(prev[parent as keyof AssetData] as Record<string, any>),
           [child]: value
         }
       }));
