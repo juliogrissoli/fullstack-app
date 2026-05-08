@@ -121,7 +121,9 @@ function CadastroForm() {
             nome: formData.nome,
             telefone: formData.telefone,
             creci: formData.creci,
-            role: formData.role
+            role: formData.role,
+            plano: planoSelecionado || 'basic',
+            trial_inicio: new Date().toISOString(),
           }
         }
       });
@@ -154,10 +156,10 @@ function CadastroForm() {
         })
       });
 
-      toast.success('Cadastro realizado com sucesso! Verifique seu email.');
-      
-      // 4. Redirecionar para onboarding
-      router.push('/onboarding');
+      toast.success('Cadastro realizado! Bem-vindo ao Security Broker SB.');
+
+      // 4. Redirecionar: onboarding → depois dashboard (7 dias trial automático)
+      router.push(`/onboarding?plano=${planoSelecionado || 'basic'}`);
 
     } catch (error) {
       console.error('Erro no cadastro:', error);
