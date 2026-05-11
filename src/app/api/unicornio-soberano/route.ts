@@ -2,12 +2,20 @@
 // API de Controle de Ecossistema e Fusão Final de Todos os Módulos
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: ReturnType<typeof createClient> | null = null;
+const supabase = new Proxy({}, {
+  get(_: unknown, prop: string | symbol) {
+    if (!_supabase) {
+      _supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+    }
+    return Reflect.get(_supabase, prop);
+  },
+}) as SupabaseClient<any>;
 
 interface UnicornioSoberanoRequest {
   acao: 'processar_deep_intent' | 'avm_instantaneo' | 'gerar_lookalike' | 'validar_biometria_3d' | 'criar_nexo_causal' | 'processar_revenue_stack' | 'configurar_imobiliaria_socia' | 'distribuir_leads_roleta' | 'processar_tesouro_v29' | 'criar_dashboard_transparencia' | 'configurar_beneficiario_rede' | 'enviar_chat_criptografado';

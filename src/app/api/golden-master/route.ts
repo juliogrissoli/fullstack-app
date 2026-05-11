@@ -2,12 +2,20 @@
 // API de Fusão Final de Todos os Módulos - Versão Golden Master
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: ReturnType<typeof createClient> | null = null;
+const supabase = new Proxy({}, {
+  get(_: unknown, prop: string | symbol) {
+    if (!_supabase) {
+      _supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+    }
+    return Reflect.get(_supabase, prop);
+  },
+}) as SupabaseClient<any>;
 
 interface GoldenMasterRequest {
   acao: 'processar_split_4_vias' | 'distribuir_recorrencia_5x5' | 'consultar_dashboard_master' | 'executar_teste_escala' | 'validar_soberania' | 'configurar_sucessao';

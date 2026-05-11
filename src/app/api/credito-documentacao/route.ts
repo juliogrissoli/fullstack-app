@@ -2,12 +2,20 @@
 // API de Crédito para Documentação (ITBI/Registro) e Rebate de Originação
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: ReturnType<typeof createClient> | null = null;
+const supabase = new Proxy({}, {
+  get(_: unknown, prop: string | symbol) {
+    if (!_supabase) {
+      _supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+    }
+    return Reflect.get(_supabase, prop);
+  },
+}) as SupabaseClient<any>;
 
 interface CreditoDocumentacaoRequest {
   acao: 'solicitar_credito' | 'aprovar_credito' | 'consultar_parcelas' | 'processar_rebate' | 'consultar_fluxo';

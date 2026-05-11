@@ -1,0 +1,11 @@
+# Como gerar openapi.json estático
+
+Com o servidor rodando (npm run dev), execute:
+
+  curl http://localhost:3000/api/docs > public/openapi.json
+
+Ou acesse diretamente em produção:
+
+  curl https://anjoimob.com.br/api/docs > public/openapi.json
+
+A documentação interativa está disponível em /docs

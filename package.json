@@ -14,7 +14,8 @@
     "test-security": "tsx src/scripts/test-security-break.ts",
     "system-check": "tsx -e \"import('./src/app/api/admin/system-check/route.ts').then(m => m.GET({ url: 'http://localhost:3000/api/admin/system-check' }));\"",
     "sync-vercel": "node scripts/sync-vercel-env.js",
-    "fix-critical": "node scripts/fix-critical-env.js"
+    "fix-critical": "node scripts/fix-critical-env.js",
+    "generate-docs": "node scripts/generate-docs.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.1",

@@ -2,12 +2,20 @@
 // API de infraestrutura de rede e ativos proprietários
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: ReturnType<typeof createClient> | null = null;
+const supabase = new Proxy({}, {
+  get(_: unknown, prop: string | symbol) {
+    if (!_supabase) {
+      _supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+    }
+    return Reflect.get(_supabase, prop);
+  },
+}) as SupabaseClient<any>;
 
 interface GlobalStandardGatesMuskRequest {
   acao: 'tokenizar_ativo_rwa' | 'criar_cliente_sb_connect' | 'sincronizar_cbr_index_oracle' | 'criar_obra_proprietaria' | 'analisar_viabilidade_loteamento' | 'criar_projeto_reino_sb_global' | 'custodiar_escritura_digital' | 'consultar_ativos_rwa' | 'consultar_clientes_sb_connect' | 'consultar_dados_cbr_index' | 'consultar_obras_proprietarias' | 'consultar_viabilidades_loteamento' | 'consultar_projetos_reino_sb_global' | 'consultar_escrituras_digitais';

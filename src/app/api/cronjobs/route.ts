@@ -2,12 +2,20 @@
 // Sistema de cobrança e gestão de workflow D+10/D+30
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: ReturnType<typeof createClient> | null = null;
+const supabase = new Proxy({}, {
+  get(_: unknown, prop: string | symbol) {
+    if (!_supabase) {
+      _supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+    }
+    return Reflect.get(_supabase, prop);
+  },
+}) as SupabaseClient<any>;
 
 // Função principal para executar todos os cronjobs
 export async function GET(request: NextRequest) {

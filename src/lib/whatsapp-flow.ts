@@ -4,13 +4,19 @@
  * WhatsApp Flow com Deep Link para assinatura (80% pre-fetch)
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { createHash } from 'crypto';
 
-// Configurações
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+let _sbWa: ReturnType<typeof createClient> | null = null;
+const supabase = new Proxy({}, {
+  get(_: object, prop: string | symbol) {
+    if (!_sbWa) _sbWa = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    return Reflect.get(_sbWa, prop);
+  },
+}) as SupabaseClient<any>;
 
 // Interfaces
 interface WhatsAppMessage {

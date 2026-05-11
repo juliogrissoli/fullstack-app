@@ -4,7 +4,13 @@
 
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let _resend: Resend | null = null;
+const resend = new Proxy({}, {
+  get(_: object, prop: string | symbol) {
+    if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
+    return Reflect.get(_resend, prop);
+  },
+}) as unknown as Resend;
 
 export interface EmailData {
   para: string;

@@ -9,7 +9,7 @@
  * 4. Integração Vercel Edge Config
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { createHash } from 'crypto';
 
@@ -62,9 +62,22 @@ interface ModuleStatus {
   };
 }
 
-// Instâncias
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-const resend = new Resend(resendApiKey);
+// Instâncias (lazy para evitar falha no build quando env vars estão vazias)
+let _sbMon: ReturnType<typeof createClient> | null = null;
+const supabase = new Proxy({}, {
+  get(_: object, prop: string | symbol) {
+    if (!_sbMon) _sbMon = createClient(supabaseUrl, supabaseServiceKey);
+    return Reflect.get(_sbMon, prop);
+  },
+}) as SupabaseClient<any>;
+
+let _resendMon: Resend | null = null;
+const resend = new Proxy({}, {
+  get(_: object, prop: string | symbol) {
+    if (!_resendMon) _resendMon = new Resend(resendApiKey);
+    return Reflect.get(_resendMon, prop);
+  },
+}) as unknown as Resend;
 
 // Contador global para transações Match
 let matchTransactionCount = 0;

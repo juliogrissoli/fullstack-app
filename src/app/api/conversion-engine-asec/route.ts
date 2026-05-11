@@ -2,12 +2,20 @@
 // API de sistema operacional de conteúdo e conversão patrimonial
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: ReturnType<typeof createClient> | null = null;
+const supabase = new Proxy({}, {
+  get(_: unknown, prop: string | symbol) {
+    if (!_supabase) {
+      _supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+    }
+    return Reflect.get(_supabase, prop);
+  },
+}) as SupabaseClient<any>;
 
 interface ConversionEngineASECRequest {
   acao: 'processar_sequencia_asec' | 'gerar_asset_visual' | 'processar_decisao_patrimonial' | 'disparar_automacao_direct' | 'validar_gatekeeper' | 'processar_contribuicao_reino_jesus_cristo_v31' | 'consultar_configuracoes_sequencia' | 'consultar_ciclos_conteudo' | 'consultar_assets_gerados' | 'consultar_decisoes_automaticas' | 'consultar_logs_automação' | 'consultar_validacoes_gatekeeper' | 'consultar_tesouro_reino_jesus_cristo_v31';

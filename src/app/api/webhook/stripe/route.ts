@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-04-22.dahlia' as any,
-})
+let _stripe: Stripe | null = null;
+const stripe = new Proxy({}, {
+  get(_: object, prop: string | symbol) {
+    if (!_stripe) _stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: '2026-04-22.dahlia' as any,
+    });
+    return Reflect.get(_stripe, prop);
+  },
+}) as unknown as Stripe;
 
 export async function POST(req: NextRequest) {
   const body = await req.text()

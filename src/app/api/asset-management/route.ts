@@ -2,12 +2,20 @@
 // API de Gestão de Ativos e Tabela Referencial de Honorários CRECI
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let _supabase: ReturnType<typeof createClient> | null = null;
+const supabase = new Proxy({}, {
+  get(_: unknown, prop: string | symbol) {
+    if (!_supabase) {
+      _supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+    }
+    return Reflect.get(_supabase, prop);
+  },
+}) as SupabaseClient<any>;
 
 interface AssetManagementRequest {
   acao: 'consultar_honorarios' | 'criar_contrato_locacao' | 'registrar_checkin' | 'realizar_vistoria' | 'vender_seguro' | 'criar_ordem_servico' | 'gerar_documento_tecnico' | 'calcular_divisao_honorarios' | 'processar_contribuicao_v28';
