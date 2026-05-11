@@ -82,6 +82,66 @@ export async function registrarIndicacao(supabase: any, novoUserId: string, codi
   return indicador;
 }
 
+// ─────────────────────────────────────────────────────────────
+// ANJOIMOB vFINAL — Trava de Score + Distribuição de Rede
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Verifica elegibilidade do corretor para receber da rede multinível.
+ * Score < 40 → valor reverte para o caixa da Anjoimob.
+ * Aceita o cliente Supabase como parâmetro (compatível com server e client).
+ */
+export async function verificarElegibilidadeRede(
+  supabase: any,
+  userId: string,
+  valorRede: number
+): Promise<{ nivelLiberado: number; valorRevertido: number }> {
+  const { data: scoreData } = await supabase
+    .from('score_logs')
+    .select('score_total, nivel_liberado')
+    .eq('user_id', userId)
+    .single()
+
+  if (!scoreData) {
+    await supabase.from('caixa_anjoimob').insert({
+      origem: 'rede_nao_distribuida',
+      motivo: 'score_inexistente',
+      user_id: userId,
+      valor: valorRede,
+      score: 0,
+    })
+    return { nivelLiberado: 0, valorRevertido: valorRede }
+  }
+
+  const score: number = scoreData.score_total
+  const nivel: number = scoreData.nivel_liberado
+
+  if (score < 40) {
+    await supabase.from('caixa_anjoimob').insert({
+      origem: 'rede_nao_distribuida',
+      motivo: 'score_insuficiente',
+      user_id: userId,
+      valor: valorRede,
+      score,
+    })
+    return { nivelLiberado: 0, valorRevertido: valorRede }
+  }
+
+  return { nivelLiberado: nivel, valorRevertido: 0 }
+}
+
+/**
+ * Distribui o valor da rede apenas para os níveis que o corretor tem direito.
+ * Retorna array de 5 posições com o valor por nível (0 se não liberado).
+ */
+export function distribuirRedeComScore(
+  valorTotal: number,
+  nivelLiberado: number,
+  percentuais: number[] = [0.40, 0.25, 0.15, 0.10, 0.10]
+): number[] {
+  return percentuais.map((pct, i) => (i < nivelLiberado ? valorTotal * pct : 0))
+}
+
 export function calcularNivelUsuario(indicadoPor: string | null): number {
   // Esta função seria usada em um contexto real para calcular o nível
   // baseado na cadeia de indicações. Por enquanto, retorna 1 como padrão
