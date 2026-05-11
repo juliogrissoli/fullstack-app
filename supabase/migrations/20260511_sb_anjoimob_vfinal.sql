@@ -136,6 +136,20 @@ CREATE POLICY "Usuário vê suas próprias transações"
 CREATE POLICY "Sistema pode inserir transações"
     ON wallet_transactions FOR INSERT WITH CHECK (true);
 
+-- Percentuais da Rede Unificada (Pilar 5)
+INSERT INTO config_split (nome_config, percentual, descricao, modulo) VALUES
+('rede_cascata_n1',   40.0, 'Nível 1 da cascata',          'rede'),
+('rede_cascata_n2',   25.0, 'Nível 2 da cascata',          'rede'),
+('rede_cascata_n3',   15.0, 'Nível 3 da cascata',          'rede'),
+('rede_cascata_n4',   10.0, 'Nível 4 da cascata',          'rede'),
+('rede_cascata_n5',   10.0, 'Nível 5 da cascata',          'rede'),
+('rede_indicacao_n1',  5.0, 'Indicação Nível 1 sobre SB',  'rede'),
+('rede_indicacao_n2',  4.0, 'Indicação Nível 2 sobre SB',  'rede'),
+('rede_indicacao_n3',  3.0, 'Indicação Nível 3 sobre SB',  'rede'),
+('rede_indicacao_n4',  2.0, 'Indicação Nível 4 sobre SB',  'rede'),
+('rede_indicacao_n5',  1.0, 'Indicação Nível 5 sobre SB',  'rede')
+ON CONFLICT (nome_config) DO NOTHING;
+
 -- Índices de performance
 CREATE INDEX IF NOT EXISTS idx_score_logs_user ON score_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_config_split_modulo ON config_split(modulo) WHERE ativo = true;
