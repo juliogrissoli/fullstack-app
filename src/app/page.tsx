@@ -90,9 +90,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Jornadas e Widgets */}
-      <JornadaCTA />
+      {/* Seção de Widgets (AVM + BuyAbility) */}
       <HomeWidgets />
+
+      {/* Seção de Jornadas */}
+      <JornadaCTA />
 
       {/* Features */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-800">
