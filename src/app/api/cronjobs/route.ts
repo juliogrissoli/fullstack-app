@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
       walletCreditos: await processarWalletCreditos(),
       comissoesAtrasadas: await processarComissoesAtrasadas(),
       expiracaoCreditos: await processarExpiracaoCreditos(),
+      slaRedistribuicao: await executarSlaRedistribuicao(),
     };
 
     return NextResponse.json({ 
@@ -343,6 +344,17 @@ async function processarComissoesAtrasadas() {
 
   } catch (error: any) {
     return { error: error.message, message: 'Erro ao processar comissões atrasadas' };
+  }
+}
+
+// Executar SLA e redistribuição de leads frios
+async function executarSlaRedistribuicao() {
+  try {
+    const { error } = await supabase.rpc('verificar_sla_e_redistribuir');
+    if (error) throw error;
+    return { success: true, message: 'SLA e redistribuição executados' };
+  } catch (error: any) {
+    return { error: error.message, message: 'Erro ao executar SLA' };
   }
 }
 

@@ -8,6 +8,12 @@ export default function QualificacaoForm() {
         decision_urgency: 'medio', has_collateral: false,
         consent_credit_check: true, target_roi: 15
     });
+    const [checklist, setChecklist] = useState({
+        possui_matricula: false,
+        iptu_quitado: false,
+        certidao_negativa: false,
+        aceita_analise_juridica: false
+    });
     const [status, setStatus] = useState('');
 
     const handleSubmit = async (e: { preventDefault(): void }) => {
@@ -55,6 +61,29 @@ export default function QualificacaoForm() {
             </label>
             <input type="number" placeholder="ROI esperado (%)" required className="w-full p-3 bg-gray-700 rounded"
                 onChange={e => setForm({...form, target_roi: Number(e.target.value)})} />
+            <div className="bg-gray-700 rounded-lg p-4 space-y-3">
+                <h3 className="text-lg font-semibold text-[#D4AF37]">⚖️ Checklist de Conformidade</h3>
+                <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={checklist.possui_matricula}
+                        onChange={e => setChecklist({...checklist, possui_matricula: e.target.checked})} />
+                    <span className="text-sm">Possui matrícula atualizada do imóvel?</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={checklist.iptu_quitado}
+                        onChange={e => setChecklist({...checklist, iptu_quitado: e.target.checked})} />
+                    <span className="text-sm">IPTU quitado (último exercício)?</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={checklist.certidao_negativa}
+                        onChange={e => setChecklist({...checklist, certidao_negativa: e.target.checked})} />
+                    <span className="text-sm">Possui certidão negativa de débitos?</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={checklist.aceita_analise_juridica}
+                        onChange={e => setChecklist({...checklist, aceita_analise_juridica: e.target.checked})} />
+                    <span className="text-sm">Autoriza análise jurídica preventiva via Themis IA?</span>
+                </label>
+            </div>
             <button type="submit" className="btn-gold-glow w-full py-3 rounded-lg font-bold"
                 disabled={status === 'enviando'}>
                 {status === 'enviando' ? 'Processando...' : 'Enviar Qualificação'}
