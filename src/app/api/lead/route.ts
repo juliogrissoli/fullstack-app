@@ -1,68 +1,55 @@
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic';
 
-let _supabase: ReturnType<typeof createClient> | null = null;
-const supabase = new Proxy({}, {
+let _resend: Resend | null = null;
+const resend = new Proxy({}, {
   get(_: object, prop: string | symbol) {
-    if (!_supabase) _supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-    return Reflect.get(_supabase, prop);
+    if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY!);
+    return Reflect.get(_resend, prop);
   },
-}) as SupabaseClient<any>;
+}) as unknown as Resend;
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
     const body = await request.json();
-    const {
-      lead_name, tax_id, intent_type,
-      financial_capacity, monthly_income,
-      decision_urgency, has_collateral,
-      consent_credit_check, target_roi
-    } = body;
 
-    if (!lead_name || !tax_id) {
-      return NextResponse.json({ erro: 'Nome e CPF/CNPJ são obrigatórios' }, { status: 400 });
-    }
+    const { data: lead, error } = await supabase.from('leads').insert({
+      lead_name: body.lead_name,
+      tax_id: body.tax_id,
+      intent_type: body.intent_type,
+      financial_capacity: body.financial_capacity,
+      monthly_income: body.monthly_income,
+      decision_urgency: body.decision_urgency,
+      has_collateral: body.has_collateral,
+      consent_credit_check: body.consent_credit_check,
+      target_roi: body.target_roi
+    }).select('id').single();
 
-    // Insere o lead — o trigger calcular_score_lead dispara automaticamente
-    const { data: lead, error: leadError } = await supabase
-      .from('leads')
-      .insert({
-        lead_name,
-        tax_id,
-        intent_type,
-        financial_capacity,
-        monthly_income,
-        decision_urgency,
-        has_collateral,
-        consent_credit_check,
-        target_roi,
-        created_at: new Date().toISOString()
-      })
-      .select('id')
-      .single();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    if (leadError) {
-      console.error('Erro ao inserir lead:', leadError);
-      return NextResponse.json({ erro: leadError.message }, { status: 500 });
-    }
-
-    // Busca a decisão gerada pelo trigger
-    const { data: engine } = await supabase
+    const { data: decision } = await supabase
       .from('decision_engine')
-      .select('lead_score, decision_path')
+      .select('decision_path')
       .eq('lead_id', lead.id)
       .single();
 
+    if (decision?.decision_path === 'ATACAR' && body.email) {
+      await resend.emails.send({
+        from: 'Anjoimob <contato@anjoimob.com.br>',
+        to: body.email,
+        subject: 'Pré-aprovado! Agende agora.',
+        html: `<h1>Parabéns, ${body.lead_name}!</h1><p>Sua qualificação foi aprovada. Nossa equipe entrará em contato em até 24h para agendar sua consultoria exclusiva.</p>`
+      });
+    }
+
     return NextResponse.json({
-      sucesso: true,
+      success: true,
       lead_id: lead.id,
-      score: engine?.lead_score ?? 0,
-      decision: engine?.decision_path ?? 'REJEITAR'
+      decision: decision?.decision_path ?? 'REJEITAR'
     });
 
   } catch (error: any) {

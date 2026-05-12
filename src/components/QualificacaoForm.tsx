@@ -3,14 +3,14 @@ import { useState } from 'react';
 
 export default function QualificacaoForm() {
     const [form, setForm] = useState({
-        lead_name: '', tax_id: '', intent_type: 'Investir',
+        lead_name: '', email: '', tax_id: '', intent_type: 'Investir',
         financial_capacity: 0, monthly_income: 0,
         decision_urgency: 'medio', has_collateral: false,
         consent_credit_check: true, target_roi: 15
     });
     const [status, setStatus] = useState('');
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: { preventDefault(): void }) => {
         e.preventDefault();
         setStatus('enviando');
         const res = await fetch('/api/lead', {
@@ -27,6 +27,8 @@ export default function QualificacaoForm() {
             <h2 className="text-2xl font-bold text-[#D4AF37]">Qualificação Soberana</h2>
             <input type="text" placeholder="Nome completo" required className="w-full p-3 bg-gray-700 rounded"
                 onChange={e => setForm({...form, lead_name: e.target.value})} />
+            <input type="email" placeholder="E-mail" required className="w-full p-3 bg-gray-700 rounded"
+                onChange={e => setForm({...form, email: e.target.value})} />
             <input type="text" placeholder="CPF/CNPJ" required className="w-full p-3 bg-gray-700 rounded"
                 onChange={e => setForm({...form, tax_id: e.target.value})} />
             <select className="w-full p-3 bg-gray-700 rounded"
