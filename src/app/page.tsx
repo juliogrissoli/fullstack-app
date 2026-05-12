@@ -5,6 +5,7 @@ import Link from 'next/link';
 import HomeWidgets from '@/components/HomeWidgets';
 import JornadaCTA from '@/components/JornadaCTA';
 import YaraFloatingButton from '@/components/YaraFloatingButton';
+import ComendadorBar from '@/components/ComendadorBar';
 
 const PLANOS = [
   {
@@ -42,6 +43,8 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
+      <ComendadorBar />
+
       {/* Navigation */}
       <nav className="bg-gray-800 border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
