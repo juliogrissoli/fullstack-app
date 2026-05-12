@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import HomeWidgets from '@/components/HomeWidgets';
+import JornadaCTA from '@/components/JornadaCTA';
+import YaraFloatingButton from '@/components/YaraFloatingButton';
 
 const PLANOS = [
   {
@@ -86,6 +89,10 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Jornadas e Widgets */}
+      <JornadaCTA />
+      <HomeWidgets />
 
       {/* Features */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-800">
@@ -216,6 +223,8 @@ export default function LandingPage() {
           </Link>
         </div>
       </section>
+
+      <YaraFloatingButton />
 
       {/* Footer */}
       <footer className="bg-gray-900 border-t border-gray-700 py-12 px-4 sm:px-6 lg:px-8">
