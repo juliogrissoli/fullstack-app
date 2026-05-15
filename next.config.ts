@@ -14,8 +14,8 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.googletagmanager.com",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.googletagmanager.com https://cdn.jsdelivr.net",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https:",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://api.openai.com https://veneokdhafezboyhgxgk.supabase.co",
@@ -26,7 +26,7 @@ const securityHeaders = [
 ];
 
 const corsHeaders = [
-  { key: 'Access-Control-Allow-Origin', value: 'https://anjoimob.com.br' },
+  { key: 'Access-Control-Allow-Origin', value: 'https://www.anjoimob.com' },
   { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, DELETE, OPTIONS' },
   { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, x-api-key' },
 ];
@@ -50,7 +50,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**.supabase.co' },
-      { protocol: 'https', hostname: 'anjoimob.com.br' },
+      { protocol: 'https', hostname: 'anjoimob.com' },
     ],
   },
 };

@@ -41,7 +41,7 @@ export async function enviarScriptFechamento(
 ): Promise<boolean> {
   try {
     await resend.emails.send({
-      from: 'Anjoimob <contato@anjoimob.com.br>',
+      from: 'Anjoimob <contato@anjoimob.com>',
       to: emailLead,
       subject: 'Proposta Exclusiva — Anjoimob',
       html: `<div style="background:#1a1a2e; color:#fff; padding:20px; border-radius:8px;">

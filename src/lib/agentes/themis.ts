@@ -133,7 +133,7 @@ export async function notificarPendenciaJuridica(
 ): Promise<boolean> {
     try {
         await resend.emails.send({
-            from: 'Anjoimob Jurídico <juridico@anjoimob.com.br>',
+            from: 'Anjoimob Jurídico <juridico@anjoimob.com>',
             to: email,
             subject: '⚠️ Pendência Jurídica Detectada — Anjoimob',
             html: `
@@ -144,7 +144,7 @@ export async function notificarPendenciaJuridica(
                     <ul style="color:#f87171;">
                         ${alertas.map(a => `<li>${a}</li>`).join('')}
                     </ul>
-                    <p style="margin-top:20px;">Acesse o <a href="https://anjoimob.com.br/dashboard/juridico" style="color:#D4AF37;">Dashboard Jurídico</a> para regularizar.</p>
+                    <p style="margin-top:20px;">Acesse o <a href="https://anjoimob.com/dashboard/juridico" style="color:#D4AF37;">Dashboard Jurídico</a> para regularizar.</p>
                     <p style="color:#9ca3af; font-size:12px; margin-top:24px;">Este é um alerta automático do Agente Themis. Em caso de dúvidas, consulte seu advogado.</p>
                 </div>
             `

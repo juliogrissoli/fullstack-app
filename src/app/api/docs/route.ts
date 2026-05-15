@@ -6,10 +6,10 @@ const spec = {
     title: 'Anjoimob API',
     version: '1.0.0',
     description: 'API pública da plataforma Anjoimob — CRM, Fintech, Marketplace e IA',
-    contact: { email: 'api@anjoimob.com.br' },
+    contact: { email: 'api@anjoimob.com' },
   },
   servers: [
-    { url: process.env.NEXT_PUBLIC_APP_URL ?? 'https://anjoimob.com.br', description: 'Produção' },
+    { url: process.env.NEXT_PUBLIC_APP_URL ?? 'https://anjoimob.com', description: 'Produção' },
     { url: 'http://localhost:3000', description: 'Local' },
   ],
   components: {

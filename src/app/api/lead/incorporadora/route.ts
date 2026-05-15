@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
     });
 
     await resend.emails.send({
-      from: 'Anjoimob <contato@anjoimob.com.br>',
-      to: 'comendador@anjoimob.com.br',
+      from: 'Anjoimob <contato@anjoimob.com>',
+      to: 'comendador@anjoimob.com',
       subject: 'Nova Incorporadora Interessada',
       html: `<h2>Nova Lead de Incorporadora</h2>
         <p><strong>Nome:</strong> ${nome}</p>

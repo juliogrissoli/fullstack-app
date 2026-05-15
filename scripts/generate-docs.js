@@ -38,7 +38,7 @@ Com o servidor rodando (npm run dev), execute:
 
 Ou acesse diretamente em produção:
 
-  curl https://anjoimob.com.br/api/docs > public/openapi.json
+  curl https://anjoimob.com/api/docs > public/openapi.json
 
 A documentação interativa está disponível em /docs
   `.trim();

@@ -8,6 +8,7 @@ import DashboardGraficoVGV from '@/components/DashboardGraficoVGV';
 import DashboardCard from '@/components/DashboardCard';
 import SocialImpactMeter from '@/components/admin/SocialImpactMeter';
 import LGPDComplianceBadge from '@/components/LGPDComplianceBadge';
+import ClosingScript from '@/components/ClosingScript';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -293,6 +294,11 @@ export default async function DashboardPage() {
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Scripts de Fechamento */}
+        <div className="mt-8">
+          <ClosingScript />
         </div>
 
         {/* Botão de Ação */}

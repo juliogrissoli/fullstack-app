@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     if (decision?.decision_path === 'ATACAR' && body.email) {
       await resend.emails.send({
-        from: 'Anjoimob <contato@anjoimob.com.br>',
+        from: 'Anjoimob <contato@anjoimob.com>',
         to: body.email,
         subject: 'Pré-aprovado! Agende agora.',
         html: `<h1>Parabéns, ${body.lead_name}!</h1><p>Sua qualificação foi aprovada. Nossa equipe entrará em contato em até 24h para agendar sua consultoria exclusiva.</p>`

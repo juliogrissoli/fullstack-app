@@ -46,7 +46,7 @@ export default function DominioClient() {
         <div className="mb-4">
           <p className="text-sm text-gray-500 mb-1">Seu slug público</p>
           <code className="bg-gray-100 px-3 py-2 rounded-lg text-sm block">
-            anjoimob.com.br/associado/{slug || 'seu-slug'}
+            anjoimob.com/associado/{slug || 'seu-slug'}
           </code>
         </div>
 
