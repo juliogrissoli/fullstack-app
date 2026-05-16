@@ -397,7 +397,10 @@ CREATE INDEX IF NOT EXISTS idx_brokers_dominio ON brokers(dominio_personalizado)
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
-CREATE OR REPLACE FUNCTION encrypt_sensitive_data(input_text TEXT)
+-- Funções em schema privado para não ficarem expostas pela Data API do Supabase
+CREATE SCHEMA IF NOT EXISTS private;
+
+CREATE OR REPLACE FUNCTION private.encrypt_sensitive_data(input_text TEXT)
 RETURNS TEXT AS $$
 BEGIN
     RETURN encode(
@@ -410,7 +413,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION decrypt_sensitive_data(encrypted_text TEXT)
+-- Somente funções internas (triggers) podem chamar
+REVOKE ALL ON FUNCTION private.encrypt_sensitive_data(TEXT) FROM PUBLIC;
+
+CREATE OR REPLACE FUNCTION private.decrypt_sensitive_data(encrypted_text TEXT)
 RETURNS TEXT AS $$
 BEGIN
     RETURN pgp_sym_decrypt(
@@ -420,25 +426,44 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+REVOKE ALL ON FUNCTION private.decrypt_sensitive_data(TEXT) FROM PUBLIC;
+
+-- Wrappers públicos para uso controlado pela aplicação (service_role)
+CREATE OR REPLACE FUNCTION public.encrypt_sensitive_data(input_text TEXT)
+RETURNS TEXT AS $$
+    SELECT private.encrypt_sensitive_data(input_text);
+$$ LANGUAGE sql SECURITY DEFINER;
+
+REVOKE ALL ON FUNCTION public.encrypt_sensitive_data(TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.encrypt_sensitive_data(TEXT) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.decrypt_sensitive_data(encrypted_text TEXT)
+RETURNS TEXT AS $$
+    SELECT private.decrypt_sensitive_data(encrypted_text);
+$$ LANGUAGE sql SECURITY DEFINER;
+
+REVOKE ALL ON FUNCTION public.decrypt_sensitive_data(TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.decrypt_sensitive_data(TEXT) TO service_role;
+
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS cpf_encrypted TEXT;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS doc_encrypted TEXT;
 
-CREATE OR REPLACE FUNCTION encrypt_profile_data()
+CREATE OR REPLACE FUNCTION private.encrypt_profile_data()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.cpf IS NOT NULL THEN
-        NEW.cpf_encrypted = encrypt_sensitive_data(NEW.cpf);
+        NEW.cpf_encrypted = private.encrypt_sensitive_data(NEW.cpf);
         NEW.cpf = NULL;
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS trigger_encrypt_profile ON profiles;
 CREATE TRIGGER trigger_encrypt_profile
     BEFORE INSERT OR UPDATE ON profiles
     FOR EACH ROW
-    EXECUTE FUNCTION encrypt_profile_data();
+    EXECUTE FUNCTION private.encrypt_profile_data();
 
 
 -- ============================================================
@@ -489,7 +514,7 @@ ORDER BY table_name;
 -- PASSO FINAL — rodar SEPARADAMENTE após o script acima:
 --
 -- ALTER DATABASE postgres
---   SET "app.encryption_key" = '1e5603c22182871eaf7e683338d230ebe314663193734a2ec80afdf53d543e04';
+--   SET "app.encryption_key" = '494cc33923b9ae186cad95db04ebf0599394c8aad8654e6f43eeb6f06a084e6f';
 --
 -- (necessário para as funções encrypt_sensitive_data / decrypt_sensitive_data)
 -- ============================================================
