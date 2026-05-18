@@ -2,20 +2,7 @@
 // API de orquestração, economia de tokens e precisão de dados
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-
-let _supabase: ReturnType<typeof createClient> | null = null;
-const supabase = new Proxy({}, {
-  get(_: unknown, prop: string | symbol) {
-    if (!_supabase) {
-      _supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-    }
-    return Reflect.get(_supabase, prop);
-  },
-}) as SupabaseClient<any>;
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 interface OrchestratorTokenSaverRequest {
   acao: 'route_query_intent' | 'semantic_search_vector_cache' | 'processar_transicao_estado' | 'executar_auditoria_middleware' | 'processar_contribuicao_social_v30' | 'consultar_configuracoes_intent_router' | 'consultar_historico_queries' | 'consultar_vector_cache' | 'consultar_estado_imoveis' | 'consultar_configuracoes_middleware' | 'consultar_logs_auditoria' | 'consultar_tesouro_reino_sb_v30';

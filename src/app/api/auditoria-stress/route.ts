@@ -2,21 +2,7 @@
 // QA Engineer e Auditor de Sistemas - Validação de Escalonamento Massivo
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { v4 as uuidv4 } from 'uuid';
-
-let _supabase: ReturnType<typeof createClient> | null = null;
-const supabase = new Proxy({}, {
-  get(_: unknown, prop: string | symbol) {
-    if (!_supabase) {
-      _supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-    }
-    return Reflect.get(_supabase, prop);
-  },
-}) as SupabaseClient<any>;
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 interface AuditoriaRequest {
   tipo_teste: 'carga_massiva' | 'concorrencia_cpf' | 'auditoria_financeira' | 'inteligencia_geografica' | 'completo';
@@ -395,7 +381,7 @@ async function criarProjetosMassivos(numProjetos: number): Promise<any[]> {
   
   for (let i = 0; i < numProjetos; i++) {
     const projeto = {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       nome: `PROJETO_TESTE_${i.toString().padStart(4, '0')}`,
       cidade: `CIDADE_${i % 50}`,
       estado: 'SP',
@@ -421,7 +407,7 @@ async function criarUnidadesProjeto(projetoId: string, numUnidades: number): Pro
     const status = Math.random() > 0.7 ? 'disponivel' : Math.random() > 0.5 ? 'pasta_iniciada' : 'vendido';
     
     const unidade = {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       projeto_id: projetoId,
       numero_unidade: `${Math.floor(i / 10) + 1}${String.fromCharCode(65 + (i % 10))}`,
       status,
@@ -486,7 +472,7 @@ async function criarCorretoresTeste(numCorretores: number): Promise<any[]> {
   
   for (let i = 0; i < numCorretores; i++) {
     const corretor = {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       nome: `CORRETOR_TESTE_${i + 1}`,
       email: `corretor${i + 1}@teste.com`,
       status: 'ativo',
@@ -523,7 +509,7 @@ async function verificarCorretorPrioritario(cpf: string): Promise<any> {
   // Simular verificação de corretor com 100% pasta
   return {
     cpf,
-    corretor_id: uuidv4(),
+    corretor_id: crypto.randomUUID(),
     prioridade: '100%',
     status: 'prioritario'
   };
@@ -536,7 +522,7 @@ async function testarEleicaoAppCliente(cpf: string): Promise<any> {
   return {
     cpf,
     eleicao_realizada: true,
-    corretor_eleito: uuidv4(),
+    corretor_eleito: crypto.randomUUID(),
     outros_corretores_bloqueados: true
   };
 }
@@ -546,9 +532,9 @@ async function simularVendasMassivas(numVendas: number): Promise<any[]> {
   
   for (let i = 0; i < numVendas; i++) {
     const venda = {
-      id: uuidv4(),
-      unidade_id: uuidv4(),
-      cliente_id: uuidv4(),
+      id: crypto.randomUUID(),
+      unidade_id: crypto.randomUUID(),
+      cliente_id: crypto.randomUUID(),
       valor: 450000 + Math.floor(Math.random() * 100000),
       status: 'concluida',
       data_venda: new Date().toISOString(),
@@ -616,7 +602,7 @@ async function criarRegioesTeste(numRegioes: number): Promise<any[]> {
   
   for (let i = 0; i < numRegioes; i++) {
     const regiao = {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       nome: `REGIAO_${i}`,
       cidade: `CIDADE_${i % 100}`,
       estado: 'SP',

@@ -29,16 +29,15 @@ export async function POST(request: NextRequest) {
   const { data, error } = await supabase
     .from('leads')
     .insert({
-      client_name: nome,
-      client_phone: telefone,
-      client_email: email ?? null,
+      lead_name: nome,
+      phone: telefone,
+      email: email ?? null,
       property_id: property_id ?? null,
       source: utm_source ?? 'organico',
       utm_medium: utm_medium ?? null,
       utm_campaign: utm_campaign ?? null,
       broker_id: corretor_ref ?? null,
       status: 'novo',
-      created_at: new Date().toISOString(),
     })
     .select()
     .single();

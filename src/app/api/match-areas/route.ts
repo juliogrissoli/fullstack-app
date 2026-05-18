@@ -2,20 +2,7 @@
 // Botão MATCH habilitado para Tipos de Negócio com Estudo de Demanda do Bairro
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-
-let _supabase: ReturnType<typeof createClient> | null = null;
-const supabase = new Proxy({}, {
-  get(_: unknown, prop: string | symbol) {
-    if (!_supabase) {
-      _supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-    }
-    return Reflect.get(_supabase, prop);
-  },
-}) as SupabaseClient<any>;
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 interface MatchAreasRequest {
   incorporadora_id: string;

@@ -28,14 +28,14 @@ export async function POST(request: NextRequest) {
 
     if (docs) {
         for (const doc of docs) {
-            const analise = await analisarDocumento(doc.id, doc.tipo_documento);
+            const analise = await analisarDocumento(supabase, doc.id, doc.tipo_documento);
             analises.push(analise);
         }
     }
 
     for (const tipo of tiposObrigatorios) {
         if (!tiposEncontrados.has(tipo)) {
-            const analise = await analisarDocumento('', tipo);
+            const analise = await analisarDocumento(supabase, '', tipo);
             analises.push(analise);
         }
     }

@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
     const { error } = await supabase.from('tours_analytics').insert({
         imovel_id,
-        user_id: user?.id ?? null,
+        broker_id: user?.id ?? null,
         duracao_segundos: duracao_segundos ?? 0,
         intencao_alta: intencao_alta ?? false,
     });
@@ -25,12 +25,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    if (intencao_alta && imovel_id) {
+    if (intencao_alta && user?.id && imovel_id) {
         await supabase
             .from('leads')
             .update({ status: 'intencao_alta' })
             .eq('property_id', imovel_id)
-            .eq('user_id', user?.id ?? '');
+            .eq('broker_id', user.id);
     }
 
     return NextResponse.json({ ok: true });

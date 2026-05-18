@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { Resend } from 'resend';
 import { createHash } from 'crypto';
 import Stripe from 'stripe';
@@ -161,11 +162,7 @@ async function testarSupabase(systemCheck: SystemCheckResponse) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    // Cliente admin para operações de sistema
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    // supabaseAdmin importado de @/lib/supabase-admin
 
     // Teste 1: Health check básico
     const { data: healthCheck, error: healthError } = await supabaseAdmin

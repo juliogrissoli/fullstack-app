@@ -9,22 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { registrarConsentimentoLGPD, criarLogComContexto } from '@/lib/lgpd-compliance';
-
-// Configurações
-let _supabase: ReturnType<typeof createClient> | null = null;
-const supabase = new Proxy({}, {
-  get(_: unknown, prop: string | symbol) {
-    if (!_supabase) {
-      _supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-    }
-    return Reflect.get(_supabase, prop);
-  },
-}) as SupabaseClient<any>;
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 // Interfaces
 interface LeadCadastroRequest {
@@ -55,6 +40,27 @@ interface LeadCadastroResponse {
   };
 }
 
+
+async function criarLogComContexto(brokerId: string, entidade: string, hash: string, _req: import('next/server').NextRequest) {
+  try {
+    await supabase.from('agent_logs').insert({
+      agent_name: 'cadastro_lead',
+      action: entidade,
+      decision: 'logged',
+      message: `hash:${hash} broker:${brokerId}`,
+    });
+  } catch {}
+}
+
+async function registrarConsentimentoLGPD(leadId: string, _consentimento: boolean, _req: import('next/server').NextRequest): Promise<{ sucesso: boolean; erro?: string }> {
+  const { error } = await supabase.from('agent_logs').insert({
+    agent_name: 'lgpd',
+    action: 'consentimento_registrado',
+    decision: 'aceito',
+    message: `lead_id:${leadId}`,
+  });
+  return error ? { sucesso: false, erro: error.message } : { sucesso: true };
+}
 export async function POST(request: NextRequest) {
   try {
     console.log('🏛️ Iniciando cadastro de lead com conformidade LGPD');

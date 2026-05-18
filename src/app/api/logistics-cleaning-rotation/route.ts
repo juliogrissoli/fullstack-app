@@ -2,20 +2,7 @@
 // API de gestão de manutenção e roleta de prestadores
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-
-let _supabase: ReturnType<typeof createClient> | null = null;
-const supabase = new Proxy({}, {
-  get(_: unknown, prop: string | symbol) {
-    if (!_supabase) {
-      _supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-    }
-    return Reflect.get(_supabase, prop);
-  },
-}) as SupabaseClient<any>;
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 interface LogisticsCleaningRotationRequest {
   acao: 'processar_rotacao_prestadores' | 'criar_os_limpeza' | 'processar_auditoria_danos' | 'enviar_notificacao_automatica' | 'sincronizar_liberacao_imediata' | 'processar_contribuicao_social_v29_1' | 'consultar_prestadores' | 'consultar_os_limpeza' | 'consultar_vistorias' | 'consultar_fluxo_danos' | 'consultar_notificacoes' | 'consultar_sync_imoveis' | 'consultar_tesouro_v29_1';

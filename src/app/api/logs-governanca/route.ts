@@ -2,21 +2,8 @@
 // Logs imutáveis de cada centavo e cada lead com rastreabilidade completa
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 import { createHash } from 'crypto';
-
-let _supabase: ReturnType<typeof createClient> | null = null;
-const supabase = new Proxy({}, {
-  get(_: unknown, prop: string | symbol) {
-    if (!_supabase) {
-      _supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-    }
-    return Reflect.get(_supabase, prop);
-  },
-}) as SupabaseClient<any>;
 
 interface LogsGovernancaRequest {
   tipo_registro: 'centavo' | 'lead' | 'transacao' | 'decisao';
@@ -166,24 +153,16 @@ function gerarHashImutavel(dados: any): string {
 }
 
 async function criarLogAuditoriaAdicional(logData: any, motivo?: string): Promise<void> {
+  // Registra log duplicado em agent_logs para rastreabilidade cruzada
   try {
-    // Criar entrada adicional na tabela de auditoria para maior rastreabilidade
-    await supabase
-      .from('audit_logs')
-      .insert({
-        user_id: logData.usuario_id,
-        acao: `${logData.tipo_registro}_${logData.acao}`,
-        tabela_afetada: logData.entidade_tabela,
-        registro_id: logData.entidade_id,
-        dados_anteriores: logData.dados_anteriores,
-        dados_novos: logData.dados_novos,
-        ip_address: logData.ip_address,
-        user_agent: logData.user_agent,
-        observacoes: motivo || `Log de governança: ${logData.id}`
-      });
-  } catch (error) {
-    console.error("🚨 Falha na Condução de Decisão Patrimonial:", error instanceof Error ? error.message : "Erro desconhecido");
-    // Não lançar erro para não quebrar o fluxo principal
+    await supabase.from('agent_logs').insert({
+      agent_name: 'governanca',
+      action: `${logData.tipo_registro}_${logData.acao}`,
+      decision: 'logged',
+      message: motivo ?? `Log de governança: ${logData.id}`,
+    });
+  } catch {
+    // Não quebrar o fluxo principal
   }
 }
 
