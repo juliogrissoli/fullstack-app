@@ -54,6 +54,9 @@ export default function LandingPage() {
               <Link href="/planos" className="text-gray-300 hover:text-white transition">
                 Planos
               </Link>
+              <Link href="/codex-tasks" className="text-gray-300 hover:text-white transition">
+                Codex Tasks
+              </Link>
               <Link href="/login" className="text-gray-300 hover:text-white transition">
                 Entrar
               </Link>

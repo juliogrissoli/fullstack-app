@@ -1,5 +1,10 @@
+import { randomBytes, timingSafeEqual } from 'crypto';
+
 export class SecurityBroker {
   private static instance: SecurityBroker;
+
+  // WARNING: in-memory rate limit is per-process and not shared across serverless instances.
+  // For production multi-instance deployments, replace with Upstash Redis or Vercel Firewall.
   private rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
   private constructor() {}
@@ -24,9 +29,11 @@ export class SecurityBroker {
     return emailRegex.test(email);
   }
 
-  async hashPassword(password: string): Promise<string> {
+  // NOTE: use only for non-password hashing (checksums, fingerprints).
+  // Passwords are handled exclusively by Supabase Auth (bcrypt internally).
+  async hashData(input: string): Promise<string> {
     const encoder = new TextEncoder();
-    const data = encoder.encode(password);
+    const data = encoder.encode(input);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -34,32 +41,27 @@ export class SecurityBroker {
 
   rateLimit(identifier: string, limit: number, windowMs: number): boolean {
     const now = Date.now();
-    const key = identifier;
-    const record = this.rateLimitMap.get(key);
+    const record = this.rateLimitMap.get(identifier);
 
     if (!record || now > record.resetTime) {
-      this.rateLimitMap.set(key, { count: 1, resetTime: now + windowMs });
+      this.rateLimitMap.set(identifier, { count: 1, resetTime: now + windowMs });
       return true;
     }
 
-    if (record.count >= limit) {
-      return false;
-    }
+    if (record.count >= limit) return false;
 
     record.count++;
     return true;
   }
 
   generateSecureToken(length: number = 32): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+    // randomBytes is cryptographically secure (CSPRNG), unlike Math.random()
+    return randomBytes(Math.ceil(length * 3 / 4)).toString('base64url').substring(0, length);
   }
 
   validateCSRF(token: string, sessionToken: string): boolean {
-    return token === sessionToken;
+    // Use timingSafeEqual to prevent timing-oracle attacks
+    if (!token || !sessionToken || token.length !== sessionToken.length) return false;
+    return timingSafeEqual(Buffer.from(token), Buffer.from(sessionToken));
   }
 }
