@@ -121,7 +121,7 @@ async function processarCobrancaEstruturacao() {
       .from('incorporadoras')
       .select('*')
       .eq('status', 'ativa')
-      .in('plano', ['premium', 'imperial'])
+      .in('plano', ['premium', 'enterprise'])
       .gte('valor_setup', 135000)
       .lte('proximo_vencimento', dataD30.toISOString())
       .is('data_ultimo_pagamento', null);

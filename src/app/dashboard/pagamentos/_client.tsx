@@ -28,8 +28,9 @@ interface Props {
 
 const PLANO_LABELS: Record<string, { label: string; cor: string }> = {
   starter: { label: 'Starter', cor: 'text-gray-400' },
+  essencial: { label: 'Essencial', cor: 'text-blue-400' },
   pro: { label: 'PRO', cor: 'text-yellow-400' },
-  imperial: { label: 'Imperial', cor: 'text-purple-400' },
+  enterprise: { label: 'Enterprise', cor: 'text-purple-400' },
 };
 
 function formatBRL(valor: number) {
@@ -54,7 +55,7 @@ export default function PagamentosClient({ broker, transacoes }: Props) {
     setLoading(null);
   }
 
-  async function upgradePlano(novoplano: 'pro' | 'imperial') {
+  async function upgradePlano(novoplano: 'essencial' | 'pro' | 'enterprise') {
     setLoading(novoplano);
     setMsg(null);
     const res = await fetch('/api/stripe/checkout', {
@@ -136,7 +137,7 @@ export default function PagamentosClient({ broker, transacoes }: Props) {
       </div>
 
       {/* Upgrade de Plano */}
-      {plano !== 'imperial' && (
+      {plano !== 'enterprise' && (
         <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-8">
           <h2 className="text-xl font-bold text-[#D4AF37] mb-6">🚀 Upgrade de Plano</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -161,7 +162,7 @@ export default function PagamentosClient({ broker, transacoes }: Props) {
               </div>
             )}
             <div className="bg-purple-900/20 border border-purple-700 rounded-xl p-6">
-              <h3 className="text-lg font-bold text-purple-400 mb-2">Anjoimob Imperial</h3>
+              <h3 className="text-lg font-bold text-purple-400 mb-2">Anjoimob Enterprise</h3>
               <p className="text-3xl font-bold text-white mb-1">R$ 997<span className="text-sm text-gray-400">/mês</span></p>
               <ul className="text-sm text-gray-300 space-y-1 my-4">
                 <li>✅ Tudo do PRO</li>
@@ -171,11 +172,11 @@ export default function PagamentosClient({ broker, transacoes }: Props) {
                 <li>✅ Suporte prioritário 24h</li>
               </ul>
               <button
-                onClick={() => upgradePlano('imperial')}
-                disabled={loading === 'imperial'}
+                onClick={() => upgradePlano('enterprise')}
+                disabled={loading === 'enterprise'}
                 className="w-full bg-purple-500 hover:bg-purple-400 text-white font-bold py-3 rounded-lg transition"
               >
-                {loading === 'imperial' ? 'Carregando...' : 'Assinar Imperial'}
+                {loading === 'enterprise' ? 'Carregando...' : 'Assinar Enterprise'}
               </button>
             </div>
           </div>

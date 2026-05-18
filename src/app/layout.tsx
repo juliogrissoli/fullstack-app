@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import '../styles/btn-gold-glow.css';
 import { Toaster } from 'react-hot-toast';
+import MarketingPixels from '@/components/MarketingPixels';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -56,6 +57,7 @@ export default function RootLayout({
           </noscript>
         )}
         {children}
+        <MarketingPixels />
         <Toaster
           position="top-right"
           toastOptions={{

@@ -1,8 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { sendEmail } from '@/lib/resend';
 import { SecurityBroker } from '@/lib/security';
-import Stripe from 'stripe';
 
 interface HealthCheckResult {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -26,10 +25,32 @@ interface ServiceStatus {
   status: 'pass' | 'fail' | 'warn';
   responseTime?: number;
   message: string;
-  details?: any;
+  details?: unknown;
 }
 
-export async function GET() {
+function requireHealthCheckSecret(request: NextRequest) {
+  const expectedSecret = process.env.HEALTH_CHECK_SECRET ?? process.env.SYSTEM_CHECK_SECRET;
+
+  if (!expectedSecret) {
+    return process.env.NODE_ENV === 'production'
+      ? NextResponse.json({ error: 'HEALTH_CHECK_SECRET nao configurado' }, { status: 503 })
+      : null;
+  }
+
+  const authToken = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+  const headerToken = request.headers.get('x-health-check-secret');
+
+  if (authToken !== expectedSecret && headerToken !== expectedSecret) {
+    return NextResponse.json({ error: 'Nao autorizado' }, { status: 401 });
+  }
+
+  return null;
+}
+
+export async function GET(request: NextRequest) {
+  const unauthorizedResponse = requireHealthCheckSecret(request);
+  if (unauthorizedResponse) return unauthorizedResponse;
+
   const startTime = Date.now();
   const health: HealthCheckResult = {
     status: 'healthy',
@@ -86,7 +107,7 @@ export async function GET() {
   // Test 2: Resend Email Service
   try {
     const resendStart = Date.now();
-    const emailResult = await sendEmail({
+    const emailResult = process.env.HEALTH_CHECK_SEND_EMAIL === 'true' ? await sendEmail({
       to: 'health-check@geo-imperium.com',
       subject: '🛡️ GEO v8.1 Health Check',
       html: `
@@ -95,7 +116,11 @@ export async function GET() {
         <p>Status: All systems operational</p>
         <p>This is an automated health check email.</p>
       `,
-    });
+    }) : {
+      success: Boolean(process.env.RESEND_API_KEY),
+      data: undefined,
+      error: 'RESEND_API_KEY nao configurada',
+    };
     
     const resendTime = Date.now() - resendStart;
 
@@ -133,21 +158,21 @@ export async function GET() {
     const sanitized = security.sanitizeInput(maliciousInput);
     
     // Test rate limiting
-    const rateLimitResult = security.rateLimit('health-check-test', 10, 60000);
+    const rateLimitWorking = security.rateLimit('health-check-test', 10, 60000);
     
     // Test token generation
     const token = security.generateSecureToken(16);
     
     const securityTime = Date.now() - securityStart;
 
-    if (sanitized && !sanitized.includes('<script>') && token && token.length === 32) {
+    if (sanitized && !sanitized.includes('<script>') && token && token.length === 16) {
       health.services.security = {
         status: 'pass',
         responseTime: securityTime,
         message: 'Security systems operational',
         details: { 
           sanitizationWorking: true,
-          rateLimitingWorking: true,
+          rateLimitWorking: rateLimitWorking,
           tokenGenerationWorking: true,
           testToken: token.substring(0, 8) + '...'
         }
@@ -219,33 +244,29 @@ export async function GET() {
   // Test 5: Stripe Integration
   try {
     const stripeStart = Date.now();
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: '2026-04-22.dahlia',
-    });
-
-    // Test Stripe API connectivity
-    const balance = await stripe.balance.retrieve();
     const stripeTime = Date.now() - stripeStart;
+    const hasStripeKey = Boolean(process.env.STRIPE_SECRET_KEY);
+    const hasStripeWebhookSecret = Boolean(process.env.STRIPE_WEBHOOK_SECRET);
 
-    if (balance && balance.object === 'balance') {
+    if (hasStripeKey) {
       health.services.stripe = {
         status: 'pass',
         responseTime: stripeTime,
-        message: 'Stripe API operational',
+        message: 'Stripe configured',
         details: {
           apiVersion: '2026-04-22.dahlia',
-          available: balance.available?.[0]?.amount || 0,
-          currency: balance.available?.[0]?.currency || 'BRL'
+          secretKeyConfigured: true,
+          webhookSecretConfigured: hasStripeWebhookSecret
         }
       };
     } else {
       health.services.stripe = {
         status: 'fail',
         responseTime: stripeTime,
-        message: 'Stripe API response invalid',
-        details: { balanceObject: balance?.object }
+        message: 'STRIPE_SECRET_KEY nao configurada',
+        details: { secretKeyConfigured: false, webhookSecretConfigured: hasStripeWebhookSecret }
       };
-      health.alerts.push('❌ Stripe API response invalid');
+      health.alerts.push('❌ Stripe API not configured');
     }
   } catch (error) {
     health.services.stripe = {
@@ -258,7 +279,6 @@ export async function GET() {
   // Calculate overall health status
   const serviceStatuses = Object.values(health.services);
   const failedServices = serviceStatuses.filter(s => s.status === 'fail').length;
-  const passedServices = serviceStatuses.filter(s => s.status === 'pass').length;
   
   if (failedServices > 0) {
     health.status = failedServices >= 2 ? 'unhealthy' : 'degraded';
@@ -291,101 +311,50 @@ export async function GET() {
   });
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const unauthorizedResponse = requireHealthCheckSecret(request);
+  if (unauthorizedResponse) return unauthorizedResponse;
+
   const body = await request.json();
-  
-  // Handle specific health checks
+
   if (body.test === 'nexo_causal') {
-    try {
-      // Test Nexo Causal Hash generation
-      const { data, error } = await supabase
-        .from('lead_views')
-        .insert({
-          user_id: 'health-check-user',
-          asset_id: 'health-check-asset'
-        })
-        .select('nexo_causal_hash')
-        .single();
-
-      if (error) {
-        return NextResponse.json({ 
-          success: false, 
-          error: error.message 
-        }, { status: 500 });
-      }
-
-      return NextResponse.json({ 
-        success: true, 
-        hash: data.nexo_causal_hash,
-        message: 'Nexo Causal Hash working correctly'
-      });
-    } catch (error) {
-      return NextResponse.json({ 
-        success: false, 
-        error: String(error) 
-      }, { status: 500 });
-    }
+    // Pure computation test — no DB writes
+    const { createHash } = await import('crypto');
+    const input = JSON.stringify({ user_id: 'hc', ts: new Date().toISOString() });
+    const hash = createHash('sha256').update(input).digest('hex');
+    return NextResponse.json({ success: true, hash, message: 'SHA-256 operational' });
   }
 
   if (body.test === 'rls_protection') {
-    try {
-      // Test RLS by trying to access sensitive data without auth
-      const { data, error } = await supabase
-        .from('land_opportunities')
-        .select('localizacao_exata, dados_proprietario')
-        .limit(1);
-
-      // RLS should prevent access to sensitive columns
-      const isProtected = error || !data || data.length === 0 || 
-                          !data[0]?.localizacao_exata || 
-                          !data[0]?.dados_proprietario;
-
-      return NextResponse.json({ 
-        success: isProtected,
-        protected: isProtected,
-        message: isProtected ? 'RLS protection active' : 'RLS protection compromised',
-        data: isProtected ? null : data[0] // Don't expose data if not protected
-      });
-    } catch (error) {
-      return NextResponse.json({ 
-        success: true, // Exception means RLS is working
-        protected: true,
-        error: String(error),
-        message: 'RLS protection active (exception expected)'
-      });
-    }
+    // Check that unauthenticated clients cannot read leads (should be empty or error)
+    const { createClient } = await import('@supabase/supabase-js');
+    const anonClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    const { data, error } = await anonClient.from('leads').select('id').limit(1);
+    const isProtected = !!error || !data || data.length === 0;
+    return NextResponse.json({
+      success: true,
+      protected: isProtected,
+      message: isProtected ? 'RLS ativo — acesso anon bloqueado' : 'ATENÇÃO: RLS pode estar desativado',
+    });
   }
 
   if (body.test === 'email_performance') {
+    // Note: address is fixed — never accept arbitrary addresses from body
     const startTime = Date.now();
-    
-    try {
-      const result = await sendEmail({
-        to: body.to || 'health-check@geo-imperium.com',
-        subject: '🛡️ Performance Test',
-        html: '<p>Performance test email</p>',
-      });
-      
-      const responseTime = Date.now() - startTime;
-
-      return NextResponse.json({ 
-        success: result.success,
-        responseTime,
-        withinThreshold: responseTime < 10000, // 10 seconds
-        message: result.success ? 
-          `Email sent in ${responseTime}ms` : 
-          `Failed: ${result.error}`
-      });
-    } catch (error) {
-      return NextResponse.json({ 
-        success: false, 
-        error: String(error),
-        responseTime: Date.now() - startTime
-      }, { status: 500 });
-    }
+    const result = await sendEmail({
+      to: process.env.HEALTH_CHECK_EMAIL ?? 'health@anjoimob.com',
+      subject: 'Health Check — Performance Test',
+      html: '<p>Automated health check.</p>',
+    });
+    return NextResponse.json({
+      success: result.success,
+      responseTime: Date.now() - startTime,
+      message: result.success ? 'Email sent' : `Failed: ${result.error}`,
+    });
   }
 
-  return NextResponse.json({ 
-    error: 'Invalid test type' 
-  }, { status: 400 });
+  return NextResponse.json({ error: 'test inválido. Use: nexo_causal | rls_protection | email_performance' }, { status: 400 });
 }

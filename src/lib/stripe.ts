@@ -7,16 +7,22 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export default stripe;
 
 export const PLANOS = {
+  essencial: {
+    nome: 'Anjoimob Essencial',
+    preco: 9700,
+    descricao: 'Até 3 imóveis, tour 360° básico e analytics simples',
+    recorrencia: 'month' as const,
+  },
   pro: {
     nome: 'Anjoimob PRO',
     preco: 29700,
-    descricao: 'Acesso completo à plataforma, CRM avançado, split automático',
+    descricao: 'Imóveis ilimitados, CRM avançado, leads prioritários, split automático',
     recorrencia: 'month' as const,
   },
-  imperial: {
-    nome: 'Anjoimob Imperial',
+  enterprise: {
+    nome: 'Anjoimob Enterprise',
     preco: 99700,
-    descricao: 'Tudo do PRO + White Label, gestão de incorporadoras, API dedicada',
+    descricao: 'Tudo do PRO + White Label, gestão de incorporadoras, API dedicada, equipe ilimitada',
     recorrencia: 'month' as const,
   },
 } as const;

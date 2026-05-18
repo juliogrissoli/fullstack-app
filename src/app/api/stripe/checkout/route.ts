@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
   const plano = PLANOS[body.plano];
   if (!plano) {
-    return NextResponse.json({ error: 'Plano inválido. Use: pro | imperial' }, { status: 400 });
+    return NextResponse.json({ error: 'Plano inválido. Use: essencial | pro | enterprise' }, { status: 400 });
   }
 
   const { data: broker } = await supabase

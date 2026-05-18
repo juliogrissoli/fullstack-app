@@ -2,9 +2,7 @@
 // Validação completa de infraestrutura do Sistema Decisório Patrimonial
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { Resend } from 'resend';
 import { createHash } from 'crypto';
 import Stripe from 'stripe';
 
@@ -12,33 +10,33 @@ interface SystemCheckResponse {
   status: 'Soberano' | 'Crítico' | 'Parcial';
   infra: {
     supabase: {
-      status: 'ok' | 'error';
+      status: 'ok' | 'error' | 'warn';
       details: string;
       rls_active: boolean;
     };
     resend: {
-      status: 'ok' | 'error';
+      status: 'ok' | 'error' | 'warn';
       details: string;
       message_id?: string | undefined;
       email_id?: string | undefined;
     };
     financeiro: {
-      status: 'ok' | 'error';
+      status: 'ok' | 'error' | 'warn';
       details: string;
       webhook_configured: boolean;
     };
     ambiente: {
-      status: 'ok' | 'error';
+      status: 'ok' | 'error' | 'warn';
       details: string;
       missing_vars: string[];
     };
     nexo_causal: {
-      status: 'ok' | 'error';
+      status: 'ok' | 'error' | 'warn';
       details: string;
       hash_test?: string;
     };
     funcao_social: {
-      status: 'ok' | 'error';
+      status: 'ok' | 'error' | 'warn';
       details: string;
       total_aportes: number;
       medidor_atual: number;
@@ -49,7 +47,41 @@ interface SystemCheckResponse {
   versao: string;
 }
 
+type ResendDomainsResponse = {
+  data?: Array<{
+    name?: string;
+    status?: string;
+  }>;
+  message?: string;
+};
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function requireSystemCheckSecret(request: NextRequest) {
+  const expectedSecret = process.env.SYSTEM_CHECK_SECRET ?? process.env.CRON_SECRET;
+
+  if (!expectedSecret) {
+    return process.env.NODE_ENV === 'production'
+      ? NextResponse.json({ error: 'SYSTEM_CHECK_SECRET nao configurado' }, { status: 503 })
+      : null;
+  }
+
+  const authToken = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+  const headerToken = request.headers.get('x-system-check-secret');
+
+  if (authToken !== expectedSecret && headerToken !== expectedSecret) {
+    return NextResponse.json({ error: 'Nao autorizado' }, { status: 401 });
+  }
+
+  return null;
+}
+
 export async function GET(request: NextRequest) {
+  const unauthorizedResponse = requireSystemCheckSecret(request);
+  if (unauthorizedResponse) return unauthorizedResponse;
+
   const startTime = Date.now();
   const systemCheck: SystemCheckResponse = {
     status: 'Soberano',
@@ -108,11 +140,11 @@ export async function GET(request: NextRequest) {
       }
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json({
       status: 'Crítico',
       error: 'Falha crítica no system check',
-      details: error.message,
+      details: getErrorMessage(error),
       timestamp: new Date().toISOString()
     }, { status: 500 });
   }
@@ -156,16 +188,15 @@ async function testarAmbiente(systemCheck: SystemCheckResponse) {
 
 async function testarSupabase(systemCheck: SystemCheckResponse) {
   try {
-    // Cliente anon para testar RLS
-    const supabaseClient = createClient(
+    // Anon client for RLS test — intentionally unauthenticated
+    const { createClient: createAnonClient } = await import('@supabase/supabase-js');
+    const supabaseClient = createAnonClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    // supabaseAdmin importado de @/lib/supabase-admin
-
-    // Teste 1: Health check básico
-    const { data: healthCheck, error: healthError } = await supabaseAdmin
+    // Teste 1: Health check básico (read-only)
+    const { error: healthError } = await supabaseAdmin
       .from('configuracoes')
       .select('chave, valor')
       .eq('chave', 'system_health')
@@ -192,10 +223,10 @@ async function testarSupabase(systemCheck: SystemCheckResponse) {
       rls_active: rlsActive
     };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     systemCheck.infra.supabase = {
       status: 'error',
-      details: `Falha na conexão: ${error.message}`,
+      details: `Falha na conexão: ${getErrorMessage(error)}`,
       rls_active: false
     };
   }
@@ -224,12 +255,12 @@ async function testarResend(systemCheck: SystemCheckResponse) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json() as ResendDomainsResponse;
       throw new Error(`Falha na validação: ${errorData.message || response.statusText}`);
     }
 
-    const domains = await response.json();
-    const verifiedDomain = domains.data?.find((d: any) => d.status === 'verified');
+    const domains = await response.json() as ResendDomainsResponse;
+    const verifiedDomain = domains.data?.find((domain: { status?: string }) => domain.status === 'verified');
 
     if (!verifiedDomain) {
       throw new Error('Nenhum domínio verificado encontrado');
@@ -241,10 +272,10 @@ async function testarResend(systemCheck: SystemCheckResponse) {
       email_id: 'domain-verified'
     };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     systemCheck.infra.resend = {
       status: 'error',
-      details: `Falha na validação Resend: ${error.message}`,
+      details: `Falha na validação Resend: ${getErrorMessage(error)}`,
       email_id: undefined
     };
   }
@@ -267,25 +298,12 @@ async function testarFinanceiro(systemCheck: SystemCheckResponse) {
       apiVersion: '2026-04-22.dahlia'
     });
 
-    // Teste 1: Verificar conexão com Stripe
+    // Teste 1: Verificar conexão com Stripe (read-only, sem side effects)
     const balance = await stripe.balance.retrieve();
     
     // Teste 2: Verificar webhook configuration
     const webhookConfigured = !!process.env.STRIPE_WEBHOOK_SECRET && 
                            !process.env.STRIPE_WEBHOOK_SECRET.includes('SECRET_KEY_PLACEHOLDER');
-
-    // Teste 3: Criar customer de teste
-    const testCustomer = await stripe.customers.create({
-      email: 'system-test@securitybroker.com',
-      name: 'System Test SB',
-      metadata: {
-        source: 'system_check',
-        environment: process.env.NODE_ENV || 'development'
-      }
-    });
-
-    // Limpar customer de teste
-    await stripe.customers.del(testCustomer.id);
 
     systemCheck.infra.financeiro = {
       status: 'ok',
@@ -293,10 +311,10 @@ async function testarFinanceiro(systemCheck: SystemCheckResponse) {
       webhook_configured: webhookConfigured
     };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     systemCheck.infra.financeiro = {
       status: 'error',
-      details: `Falha na validação financeira: ${error.message}`,
+      details: `Falha na validação financeira: ${getErrorMessage(error)}`,
       webhook_configured: false
     };
   }
@@ -341,10 +359,10 @@ async function testarNexoCausal(systemCheck: SystemCheckResponse) {
       hash_test: hashGerado.substring(0, 16) + '...'
     };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     systemCheck.infra.nexo_causal = {
       status: 'error',
-      details: `Falha na criptografia: ${error.message}`
+      details: `Falha na criptografia: ${getErrorMessage(error)}`
     };
   }
 }
@@ -354,20 +372,19 @@ async function testarFuncaoSocial(systemCheck: SystemCheckResponse) {
     const supabase = supabaseAdmin;
 
     // Teste 1: Verificar se a view existe
-    const { data: viewTest, error: viewError } = await supabase
+    const { error: viewError } = await supabase
       .from('view_funcao_social_stats')
       .select('total_funcao_social')
       .limit(1);
 
     if (viewError) {
-      if (viewError.code === 'PGRST116') {
-        // View não existe - criar dados simulados para teste
+      if (viewError.code === 'PGRST116' || viewError.code === '42P01') {
         systemCheck.infra.funcao_social = {
-          status: 'ok',
-          details: 'Função Social simulada - view não implementada',
-          total_aportes: 25000,
-          medidor_atual: 25000,
-          validacao_percentual: true
+          status: 'warn',
+          details: 'View view_funcao_social_stats não implementada — funcionalidade pendente',
+          total_aportes: 0,
+          medidor_atual: 0,
+          validacao_percentual: false
         };
         return;
       }
@@ -410,10 +427,10 @@ async function testarFuncaoSocial(systemCheck: SystemCheckResponse) {
       validacao_percentual: validacaoPercentual
     };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     systemCheck.infra.funcao_social = {
       status: 'error',
-      details: `Falha na validação: ${error.message}`,
+      details: `Falha na validação: ${getErrorMessage(error)}`,
       total_aportes: 0,
       medidor_atual: 0,
       validacao_percentual: false
@@ -423,8 +440,11 @@ async function testarFuncaoSocial(systemCheck: SystemCheckResponse) {
 
 // Endpoint para forçar re-teste individual
 export async function POST(request: NextRequest) {
+  const unauthorizedResponse = requireSystemCheckSecret(request);
+  if (unauthorizedResponse) return unauthorizedResponse;
+
   try {
-    const body = await request.json();
+    const body = await request.json() as { component?: keyof SystemCheckResponse['infra'] };
     const { component } = body;
 
     if (!component) {
@@ -480,10 +500,10 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString()
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json({
       error: 'Falha no teste individual',
-      details: error.message
+      details: getErrorMessage(error)
     }, { status: 500 });
   }
 }

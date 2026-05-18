@@ -40,10 +40,18 @@ export async function POST(req: NextRequest) {
           ativo_ate.setMonth(ativo_ate.getMonth() + 1);
           await supabaseAdmin.from('brokers').update({
             plan: plano,
+            is_associado: plano === 'pro' || plano === 'enterprise',
             stripe_customer_id: session.customer as string,
             stripe_subscription_id: session.subscription as string,
             plano_ativo_ate: ativo_ate.toISOString(),
           }).eq('user_id', userId);
+
+          await supabaseAdmin.from('agent_logs').insert({
+            agent_name: 'plutus',
+            action: 'assinatura_ativada',
+            decision: plano,
+            message: `Broker ${userId} assinou plano ${plano} via checkout ${session.id}`,
+          });
         }
         await supabaseAdmin.from('stripe_transactions').insert({
           stripe_account_id: session.customer as string,
@@ -90,6 +98,19 @@ export async function POST(req: NextRequest) {
           event_type: event.type,
           stripe_event_id: event.id,
         });
+        // Registrar crédito na wallet do broker se broker_id estiver nos metadados
+        const brokerId = pi.metadata?.broker_id;
+        if (brokerId) {
+          try {
+            await supabaseAdmin.from('wallet_transactions').insert({
+              user_id: brokerId,
+              tipo: 'comissao',
+              valor_bruto: pi.amount / 100,
+              valor_liquido: (pi.amount / 100) * 0.80,
+              status: 'liberado',
+            });
+          } catch { /* tabela pode não existir ainda */ }
+        }
         break;
       }
 

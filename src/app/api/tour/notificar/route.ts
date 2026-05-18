@@ -4,7 +4,25 @@ import { Resend } from 'resend';
 
 export const dynamic = 'force-dynamic';
 
+function escapeHtml(text: string): string {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 export async function POST(req: NextRequest) {
+    // Requer chave interna para evitar abuso por terceiros
+    const internalKey = process.env.INTERNAL_API_KEY;
+    if (internalKey) {
+        const provided = req.headers.get('x-internal-key');
+        if (provided !== internalKey) {
+            return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+        }
+    }
+
     const supabase = await createClient();
 
     const body = await req.json();
@@ -42,15 +60,17 @@ export async function POST(req: NextRequest) {
     const minutos = Math.floor((duracao_segundos ?? 0) / 60);
     const segundos = (duracao_segundos ?? 0) % 60;
     const tempo = minutos > 0 ? `${minutos}min ${segundos}s` : `${segundos}s`;
-    const nomeVisitante = lead_nome?.trim() || 'Visitante anônimo';
-    const telefone = lead_telefone?.trim() || 'Não informado';
+    const nomeVisitante = escapeHtml(lead_nome?.trim() || 'Visitante anônimo');
+    const telefone = escapeHtml(lead_telefone?.trim() || 'Não informado');
+    const tituloImovel = escapeHtml(imovel.titulo ?? '');
+    const nomeCorretor = escapeHtml(corretor.name || 'corretor');
 
     const resend = new Resend(resendKey);
 
     const { error: emailError } = await resend.emails.send({
         from: 'Anjoimob <contato@anjoimob.com>',
         to: corretor.email,
-        subject: `Lead quente — ${nomeVisitante} passou ${tempo} no tour de ${imovel.titulo}`,
+        subject: `Lead quente — ${nomeVisitante} passou ${tempo} no tour de ${tituloImovel}`,
         html: `
 <!DOCTYPE html>
 <html>
@@ -66,12 +86,12 @@ export async function POST(req: NextRequest) {
         <tr>
           <td style="padding:28px;">
             <p style="margin:0 0 20px;color:#f9fafb;font-size:16px;">
-              Olá, <strong>${corretor.name || 'corretor'}</strong>! Um visitante demonstrou interesse alto no seu imóvel.
+              Olá, <strong>${nomeCorretor}</strong>! Um visitante demonstrou interesse alto no seu imóvel.
             </p>
             <table width="100%" cellpadding="8" cellspacing="0" style="background:#111827;border-radius:8px;border:1px solid #374151;margin-bottom:24px;">
               <tr>
                 <td style="color:#9ca3af;font-size:13px;width:130px;padding:10px 12px;">Imóvel</td>
-                <td style="color:#f9fafb;font-size:13px;font-weight:bold;padding:10px 12px;">${imovel.titulo}</td>
+                <td style="color:#f9fafb;font-size:13px;font-weight:bold;padding:10px 12px;">${tituloImovel}</td>
               </tr>
               <tr style="border-top:1px solid #374151;">
                 <td style="color:#9ca3af;font-size:13px;padding:10px 12px;">Visitante</td>
