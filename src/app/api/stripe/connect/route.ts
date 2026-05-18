@@ -1,17 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
+import stripe from '@/lib/stripe';
 
-let _stripe: Stripe | null = null;
-const stripe = new Proxy({}, {
-  get(_: object, prop: string | symbol) {
-    if (!_stripe) _stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: '2026-04-22.dahlia' as any,
-    });
-    return Reflect.get(_stripe, prop);
-  },
-}) as unknown as Stripe;
-
+// POST — cria ou recupera conta Stripe Express do corretor
 export async function POST(_request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -19,27 +10,25 @@ export async function POST(_request: NextRequest) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('nome, email')
+    .select('full_name')
     .eq('id', user.id)
     .single();
 
-  // Verificar se já tem conta conectada
   const { data: broker } = await supabase
     .from('brokers')
-    .select('stripe_account_id')
+    .select('stripe_account_id, email')
     .eq('user_id', user.id)
     .single();
 
   let accountId = broker?.stripe_account_id as string | null;
 
   if (!accountId) {
-    // Criar conta Express no Stripe Connect
     const account = await stripe.accounts.create({
       type: 'express',
       country: 'BR',
-      email: profile?.email ?? user.email ?? undefined,
+      email: broker?.email ?? user.email ?? undefined,
       capabilities: { transfers: { requested: true } },
-      business_profile: { name: profile?.nome ?? 'Corretor Anjoimob' },
+      business_profile: { name: profile?.full_name ?? 'Corretor Anjoimob' },
     });
 
     accountId = account.id;
@@ -50,17 +39,17 @@ export async function POST(_request: NextRequest) {
       .eq('user_id', user.id);
   }
 
-  // Link de onboarding Stripe
   const accountLink = await stripe.accountLinks.create({
     account: accountId,
-    refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?stripe=refresh`,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?stripe=success`,
+    refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/pagamentos?stripe=refresh`,
+    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/pagamentos?stripe=success`,
     type: 'account_onboarding',
   });
 
   return NextResponse.json({ url: accountLink.url, account_id: accountId });
 }
 
+// GET — retorna status da conta Stripe Connect do corretor
 export async function GET(_request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -68,12 +57,12 @@ export async function GET(_request: NextRequest) {
 
   const { data: broker } = await supabase
     .from('brokers')
-    .select('stripe_account_id')
+    .select('stripe_account_id, stripe_verified, plan, plano_ativo_ate')
     .eq('user_id', user.id)
     .single();
 
   if (!broker?.stripe_account_id) {
-    return NextResponse.json({ connected: false });
+    return NextResponse.json({ connected: false, plan: broker?.plan ?? 'starter' });
   }
 
   const account = await stripe.accounts.retrieve(broker.stripe_account_id as string);
@@ -83,5 +72,7 @@ export async function GET(_request: NextRequest) {
     charges_enabled: account.charges_enabled,
     payouts_enabled: account.payouts_enabled,
     account_id: account.id,
+    plan: broker.plan,
+    plano_ativo_ate: broker.plano_ativo_ate,
   });
 }

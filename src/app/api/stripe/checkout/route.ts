@@ -1,185 +1,79 @@
-import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
-import { supabase } from '@/lib/supabase-admin';
+import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
+import stripe, { PLANOS, type PlanoKey } from '@/lib/stripe';
 
-let _stripe: Stripe | null = null;
-const stripe = new Proxy({}, {
-  get(_: object, prop: string | symbol) {
-    if (!_stripe) _stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: '2026-04-22.dahlia' as any,
-    });
-    return Reflect.get(_stripe, prop);
-  },
-}) as unknown as Stripe;
+// POST — cria sessão de checkout para upgrade de plano
+export async function POST(request: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
-export async function POST(request: Request) {
-  try {
-    const { assetId, userId, reportType } = await request.json();
-
-    // Validar dados
-    if (!assetId || !userId || !reportType) {
-      return NextResponse.json(
-        { error: 'Dados incompletos' },
-        { status: 400 }
-      );
-    }
-
-    // Obter informações do ativo
-    const { data: asset, error: assetError } = await supabase
-      .from('land_opportunities')
-      .select('*')
-      .eq('id', assetId)
-      .single();
-
-    if (assetError || !asset) {
-      return NextResponse.json(
-        { error: 'Ativo não encontrado' },
-        { status: 404 }
-      );
-    }
-
-    // Definir preço baseado no tipo de relatório
-    const reportPrices = {
-      basic: 9700, // R$ 97,00 em centavos
-      premium: 19700, // R$ 197,00 em centavos
-      complete: 29700, // R$ 297,00 em centavos
-    };
-
-    const price = reportPrices[reportType as keyof typeof reportPrices] || reportPrices.basic;
-
-    // Criar sessão de checkout Stripe
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'brl',
-            product_data: {
-              name: `Relatório ROI - ${asset.titulo}`,
-              description: `Relatório ${reportType} para análise de investimento em land banking`,
-              images: [], // Adicionar URLs de imagens se disponível
-            },
-            unit_amount: price,
-          },
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/assets/${assetId}?cancelled=true`,
-      metadata: {
-        asset_id: assetId,
-        user_id: userId,
-        report_type: reportType,
-        asset_title: asset.titulo,
-      },
-      customer_email: undefined, // Será preenchido no frontend
-    });
-
-    // Registrar tentativa de checkout em audit logs
-    await supabase.from('audit_logs').insert({
-      user_id: userId,
-      acao: 'CHECKOUT_INITIATED',
-      tabela_afetada: 'land_opportunities',
-      dados_novos: {
-        session_id: session.id,
-        asset_id: assetId,
-        report_type: reportType,
-        price: price,
-        currency: 'BRL'
-      },
-      ip_address: 'api_stripe',
-      user_agent: 'Security Broker v3.0'
-    });
-
-    return NextResponse.json({
-      success: true,
-      sessionId: session.id,
-      url: session.url,
-      price: price,
-      currency: 'BRL'
-    });
-
-  } catch (error) {
-    console.error('Erro no checkout Stripe:', error);
-    return NextResponse.json(
-      { error: 'Erro ao processar pagamento' },
-      { status: 500 }
-    );
+  let body: { plano: PlanoKey };
+  try { body = await request.json(); } catch {
+    return NextResponse.json({ error: 'Body inválido' }, { status: 400 });
   }
+
+  const plano = PLANOS[body.plano];
+  if (!plano) {
+    return NextResponse.json({ error: 'Plano inválido. Use: pro | imperial' }, { status: 400 });
+  }
+
+  const { data: broker } = await supabase
+    .from('brokers')
+    .select('email, full_name, stripe_customer_id')
+    .eq('user_id', user.id)
+    .single();
+
+  // Recuperar ou criar customer Stripe
+  let customerId = broker?.stripe_customer_id as string | null;
+  if (!customerId) {
+    const customer = await stripe.customers.create({
+      email: broker?.email ?? user.email ?? undefined,
+      name: broker?.full_name ?? undefined,
+      metadata: { user_id: user.id },
+    });
+    customerId = customer.id;
+    await supabase.from('brokers').update({ stripe_customer_id: customerId }).eq('user_id', user.id);
+  }
+
+  const session = await stripe.checkout.sessions.create({
+    customer: customerId,
+    payment_method_types: ['card'],
+    line_items: [
+      {
+        price_data: {
+          currency: 'brl',
+          product_data: { name: plano.nome, description: plano.descricao },
+          recurring: { interval: plano.recorrencia },
+          unit_amount: plano.preco,
+        },
+        quantity: 1,
+      },
+    ],
+    mode: 'subscription',
+    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/pagamentos?checkout=success&plano=${body.plano}`,
+    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/pagamentos?checkout=cancelled`,
+    metadata: { user_id: user.id, plano: body.plano },
+  });
+
+  return NextResponse.json({ url: session.url, session_id: session.id });
 }
 
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const sessionId = searchParams.get('session_id');
+// GET — verifica status de uma sessão de checkout
+export async function GET(request: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
-    if (!sessionId) {
-      return NextResponse.json(
-        { error: 'Session ID não fornecido' },
-        { status: 400 }
-      );
-    }
+  const sessionId = new URL(request.url).searchParams.get('session_id');
+  if (!sessionId) return NextResponse.json({ error: 'session_id obrigatório' }, { status: 400 });
 
-    // Recuperar sessão do Stripe
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Sessão não encontrada' },
-        { status: 404 }
-      );
-    }
-
-    // Verificar se o pagamento foi concluído
-    if (session.payment_status !== 'paid') {
-      return NextResponse.json(
-        { error: 'Pagamento não concluído' },
-        { status: 400 }
-      );
-    }
-
-    // Registrar pagamento bem-sucedido
-    await supabase.from('audit_logs').insert({
-      user_id: session.metadata?.user_id,
-      acao: 'PAYMENT_SUCCESS',
-      tabela_afetada: 'land_opportunities',
-      dados_novos: {
-        session_id: sessionId,
-        asset_id: session.metadata?.asset_id,
-        report_type: session.metadata?.report_type,
-        amount: session.amount_total ?? 0,
-        currency: session.currency
-      },
-      ip_address: 'api_stripe',
-      user_agent: 'Security Broker v3.0'
-    });
-
-    // Criar registro de venda
-    await supabase.from('sales_commissions').insert({
-      user_id: session.metadata?.user_id,
-      asset_id: session.metadata?.asset_id,
-      valor_comissao: (session.amount_total ?? 0) * 0.05, // 5% de comissão
-      status_comissao: 'pendente',
-      data_venda: new Date().toISOString()
-    });
-
-    return NextResponse.json({
-      success: true,
-      session: {
-        id: session.id,
-        payment_status: session.payment_status,
-        amount_total: session.amount_total ?? 0,
-        currency: session.currency,
-        metadata: session.metadata
-      }
-    });
-
-  } catch (error) {
-    console.error('Erro ao verificar sessão:', error);
-    return NextResponse.json(
-      { error: 'Erro ao verificar pagamento' },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json({
+    status: session.status,
+    payment_status: session.payment_status,
+    plano: session.metadata?.plano,
+    amount_total: session.amount_total,
+  });
 }

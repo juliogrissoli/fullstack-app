@@ -12,7 +12,7 @@ export async function POST(_request: NextRequest) {
   const [{ data: scoreData }, { count: vendasCount }, { data: profileData }] = await Promise.all([
     supabase.from('score_logs').select('score_total').eq('user_id', user.id).single(),
     supabase.from('transactions').select('*', { count: 'exact', head: true }).eq('broker_id', user.id).eq('status', 'pago'),
-    supabase.from('profiles').select('nome').eq('id', user.id).single(),
+    supabase.from('profiles').select('full_name').eq('id', user.id).single(),
   ]);
 
   const score = scoreData?.score_total ?? 0;
@@ -32,7 +32,7 @@ export async function POST(_request: NextRequest) {
   }
 
   // Gerar slug único baseado no nome
-  const slugBase = (profileData?.nome ?? 'associado')
+  const slugBase = (profileData?.full_name ?? 'associado')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
