@@ -351,10 +351,7 @@ async function testarNexoCausal(systemCheck: SystemCheckResponse) {
 
 async function testarFuncaoSocial(systemCheck: SystemCheckResponse) {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = supabaseAdmin;
 
     // Teste 1: Verificar se a view existe
     const { data: viewTest, error: viewError } = await supabase
